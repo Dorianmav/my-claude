@@ -115,8 +115,7 @@ export const Chat = () => {
     <div className="text-center">
       <div className="p-5 max-w-[1000px] mx-auto bg-white shadow-md rounded-lg flex flex-col h-[80vh]">
         {/* Header */}
-        <div className="flex justify-between items-center mb-5">
-          <h2 className="m-0 text-lg font-semibold">Chat with Mia</h2>
+        <div >
           <button
             onClick={clearHistory}
             className="px-4 py-2 bg-gray-600 text-white rounded-md cursor-pointer"
