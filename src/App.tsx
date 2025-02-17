@@ -1,15 +1,13 @@
 import { ShowContent } from "./components/ShowContent";
+import CustomHeader from "./components/CustomHeader";
+import { useState } from "react";
 
 function App() {
+  const [isShow, setIsShow] = useState<boolean>(false);
   return (
     <>
-      <div className="text-center">
-        <h1 className="text-3xl font-bold justify-center">Chat with Mia Claude</h1>
-        <p>Initialisation du projet avec TS React et Tailwind</p>
-      </div>
-      <div>
-        <ShowContent />
-      </div>
+      <CustomHeader isShow={isShow} setIsShow={() => setIsShow(!isShow)} />
+      <ShowContent content="Hello World" isShow={isShow} />
     </>
   );
 }

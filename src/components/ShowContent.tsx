@@ -1,15 +1,25 @@
 import React from 'react'
 import { Chat } from './Chat';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
+interface ShowContentProps {
+  content?: string;
+  isShow: boolean;
+}
 
-export const ShowContent = () => {
+export const ShowContent: React.FC<ShowContentProps> = ({ content, isShow }) => {
   return (
-    <div className="flex flex-row gap-4 w-full min-h-screen p-4">
-      <div className="flex-1">
+    <div className="flex h-screen bg-gray-100">
+      {/* Colonne de gauche - Chat */}
+      <div className="flex-1 p-6 border-r border-gray-200">
         <Chat />
       </div>
-      <div className="flex-1 p-4 bg-gray-50 rounded-lg">
-        <p>Rendu du code</p>
+      
+      {/* Colonne de droite - Contenu */}
+      <div className={`flex-1 p-6 bg-white ${isShow ? 'block' : 'hidden'}`}>
+        <div className="max-w-3xl mx-auto">
+          <MarkdownRenderer content={content} />
+        </div>
       </div>
     </div>
   ) 
