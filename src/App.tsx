@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Chat } from './components/Chat';
-import ShowContent from './components/ShowContent';
+import { Canva } from './components/Canva';
 import CustomHeader from './components/CustomHeader';
 import { ContentData } from './types';
 
 function App() {
   const [showContent, setShowContent] = useState(false);
-  const [contentData, setContentData] = useState<ContentData | undefined>();
+  const [contentData, setContentData] = useState<ContentData >();
 
   const handleContentGenerated = (data: ContentData) => {
     setContentData(data);
@@ -29,11 +29,13 @@ function App() {
             showContent ? 'translate-x-0' : 'translate-x-full'
           } fixed right-0 top-[88px] bottom-0 bg-white shadow-lg`}
         >
-          <ShowContent 
-            isShow={showContent}
-            contentData={contentData}
-            onClose={() => setShowContent(false)}
-          />
+          {contentData && (
+            <Canva 
+              isShow={showContent}
+              contentData={contentData}
+              onClose={() => setShowContent(false)}
+            />
+          )}
         </div>
       </div>
     </div>

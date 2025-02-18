@@ -39,52 +39,113 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   };
 
   const processMessageForContent = (message: string) => {
-    // Recherche de blocs de code avec indication de langage
+    // Recherche de blocs de code React
+    const reactComponentRegex = /```(jsx|tsx)\n([\s\S]*?)```/g;
+    let match = reactComponentRegex.exec(message);
+    if (match) {
+      const [, language, code] = match;
+      const contentData: ContentData = {
+        type: 'react-component',
+        content: code.trim(),
+        language,
+        metadata: {
+          artifact: {
+            identifier: `artifact-${Date.now()}`,
+            type: 'application/vnd.ant.react',
+            language,
+            title: 'React Component',
+            content: code.trim(),
+            isClosed: true
+          }
+        }
+      };
+      onContentGenerated(contentData);
+      return;
+    }
+
+    // Recherche de diagrammes Mermaid
+    const mermaidRegex = /```mermaid\n([\s\S]*?)```/g;
+    match = mermaidRegex.exec(message);
+    if (match) {
+      const [, diagram] = match;
+      const contentData: ContentData = {
+        type: 'mermaid',
+        content: diagram.trim(),
+        metadata: {
+          artifact: {
+            identifier: `artifact-${Date.now()}`,
+            type: 'application/vnd.ant.mermaid',
+            title: 'Diagram',
+            content: diagram.trim(),
+            isClosed: true
+          }
+        }
+      };
+      onContentGenerated(contentData);
+      return;
+    }
+
+    // Recherche d'autres blocs de code
     const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-    let match;
-    let foundCode = false;
-
-    while ((match = codeBlockRegex.exec(message)) !== null) {
-      foundCode = true;
-      // match[0] est le bloc complet, match[1] est le langage, match[2] est le code
-      const language = match[1] || 'typescript';
-      const code = match[2].trim();
-
+    match = codeBlockRegex.exec(message);
+    if (match) {
+      const [, language, code] = match;
       const contentData: ContentData = {
         type: 'code',
-        content: code,
-        language: language,
+        content: code.trim(),
+        language: language || 'typescript',
         metadata: {
           artifact: {
             identifier: `artifact-${Date.now()}`,
             type: 'application/vnd.ant.code',
-            language: language,
-            title: 'Generated Code',
-            content: code,
+            language: language || 'typescript',
+            title: 'Code',
+            content: code.trim(),
             isClosed: true
           }
         }
       };
       onContentGenerated(contentData);
+      return;
     }
 
-    // Si aucun code n'a été trouvé, traiter comme du markdown
-    if (!foundCode) {
+    // Recherche de contenu SVG
+    const svgRegex = /<svg[\s\S]*?<\/svg>/g;
+    match = svgRegex.exec(message);
+    if (match) {
+      const [svg] = match;
       const contentData: ContentData = {
-        type: 'markdown',
-        content: message,
+        type: 'svg',
+        content: svg,
         metadata: {
           artifact: {
             identifier: `artifact-${Date.now()}`,
-            type: 'text/markdown',
-            title: 'Response',
-            content: message,
+            type: 'image/svg+xml',
+            title: 'SVG Image',
+            content: svg,
             isClosed: true
           }
         }
       };
       onContentGenerated(contentData);
+      return;
     }
+
+    // Par défaut, traiter comme du markdown
+    const contentData: ContentData = {
+      type: 'markdown',
+      content: message,
+      metadata: {
+        artifact: {
+          identifier: `artifact-${Date.now()}`,
+          type: 'text/markdown',
+          title: 'Response',
+          content: message,
+          isClosed: true
+        }
+      }
+    };
+    onContentGenerated(contentData);
   };
 
   const handleSendMessage = async () => {

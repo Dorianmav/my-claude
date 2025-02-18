@@ -10,15 +10,26 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/react": "^2.1.1",
+    "@babel/standalone": "^7.26.9",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.4.4",
+    "@mui/material": "^6.4.4",
     "@tailwindcss/vite": "^4.0.3",
     "framer-motion": "^12.3.1",
     "groq-sdk": "^0.15.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "mermaid": "^11.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-hot-toast": "^2.5.1",
+    "react-live": "^4.1.8",
     "react-markdown": "^9.0.3",
-    "react-syntax-highlighter": "^15.6.1",
-    "remark-emoji": "^5.0.1"
+    "react-runner": "^1.0.3",
+    "react-syntax-highlighter": "^15.5.0",
+    "recharts": "^2.15.1",
+    "remark-emoji": "^5.0.1",
+    "tailwindcss": "^3.4.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
