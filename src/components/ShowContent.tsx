@@ -1,16 +1,7 @@
 import React from 'react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import CodeRenderer from './CodeRenderer';
-
-// Types de contenu supportés
-export type ContentType = 'code' | 'markdown' | 'react-component' | 'visualization';
-
-interface ContentData {
-  type: ContentType;
-  content: string | React.ReactNode;
-  language?: string;
-  metadata?: Record<string, unknown>;
-}
+import { ContentData } from '../types';
 
 interface ShowContentProps {
   isShow: boolean;
@@ -19,88 +10,104 @@ interface ShowContentProps {
 }
 
 const ShowContent: React.FC<ShowContentProps> = ({ isShow, contentData, onClose }) => {
+  if (!isShow || !contentData) return null;
+
+  const renderArtifact = () => {
+    const artifact = contentData.metadata?.artifact;
+    if (!artifact) return renderContent();
+
+    return (
+      <div className="h-full flex flex-col">
+        {/* Artifact header */}
+        <div className="flex justify-between items-center px-4 py-3 border-b bg-gray-50">
+          <h3 className="text-lg font-medium text-gray-900">{artifact.title}</h3>
+          {artifact.isClosed && (
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100"
+            >
+              <span className="sr-only">Close</span>
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Artifact content */}
+        <div className="flex-1 overflow-auto p-4">
+          {renderContent()}
+        </div>
+      </div>
+    );
+  };
+
   const renderContent = () => {
-    if (!contentData) return null;
+    const content = contentData.content;
+    if (!content) return null;
 
     switch (contentData.type) {
       case 'code':
         return (
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <CodeRenderer className={`language-${contentData.language || 'typescript'}`}>
-              {contentData.content as string}
+          <div className="rounded-lg bg-gray-50 p-4">
+            <CodeRenderer className={`language-${contentData.language ?? 'typescript'}`}>
+              {content}
             </CodeRenderer>
           </div>
         );
       
       case 'markdown':
         return (
-          <div className="p-4">
-            <MarkdownRenderer content={contentData.content as string} />
+          <div className="prose max-w-none">
+            <MarkdownRenderer content={content as string} />
           </div>
         );
       
       case 'react-component':
+        // Pour les composants React, on suppose que le contenu est déjà un élément React
         return (
           <div className="p-4">
-            {contentData.content as React.ReactNode}
+            {content}
           </div>
         );
       
-      case 'visualization':
+      case 'mermaid':
         return (
-          <div className="p-4 flex justify-center items-center">
-            {typeof contentData.content === 'string' ? (
-              <img 
-                src={contentData.content} 
-                alt="Visualization" 
-                className="max-w-full h-auto"
-              />
-            ) : (
-              contentData.content
-            )}
+          <div className="flex justify-center p-4">
+            <div className="mermaid w-full">
+              {content as string}
+            </div>
           </div>
+        );
+      
+      case 'svg':
+        if (typeof content !== 'string') return null;
+        return (
+          <div className="flex justify-center p-4">
+            <div 
+              className="max-w-full"
+              dangerouslySetInnerHTML={{ __html: content }} 
+            />
+          </div>
+        );
+      
+      case 'html':
+        if (typeof content !== 'string') return null;
+        return (
+          <div 
+            className="p-4"
+            dangerouslySetInnerHTML={{ __html: content }} 
+          />
         );
       
       default:
-        return <div>Unsupported content type</div>;
+        return null;
     }
   };
 
   return (
-    <div
-      className={`fixed top-0 right-0 h-full w-1/2 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-        isShow ? 'translate-x-0' : 'translate-x-full'
-      }`}
-    >
-      <div className="h-full flex flex-col">
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-lg font-semibold">
-            {contentData?.type ? `${contentData.type.charAt(0).toUpperCase() + contentData.type.slice(1)} View` : 'Content View'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-        
-        <div className="flex-1 overflow-auto">
-          {renderContent()}
-        </div>
-      </div>
+    <div className="h-full bg-white">
+      {renderArtifact()}
     </div>
   );
 };

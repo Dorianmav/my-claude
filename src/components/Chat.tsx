@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, KeyboardEvent } from "react";
+import React, { useEffect, useRef, useState, KeyboardEvent } from "react";
 import Groq from "groq-sdk";
 import { MarkdownRenderer } from "./MarkdownRenderer";
-import ShowContent from "./ShowContent"; // Import ShowContent
+import { ContentData } from '../types';
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -9,10 +9,8 @@ interface Message {
   timestamp?: string;
 }
 
-interface ContentData {
-  type: "code" | "markdown";
-  content: string;
-  language?: string;
+interface ChatProps {
+  onContentGenerated: (data: ContentData) => void;
 }
 
 const groq = new Groq({
@@ -20,7 +18,7 @@ const groq = new Groq({
   dangerouslyAllowBrowser: true,
 });
 
-export const Chat = () => {
+export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   const [inputText, setinputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -29,19 +27,64 @@ export const Chat = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [showContent, setShowContent] = useState(false);
-  const [contentData, setContentData] = useState<ContentData | undefined>();
-
   useEffect(() => {
     if (contentRef.current) {
-      //TODO Voir le scroll
-      // contentRef.current.scrollTop = contentRef.current.scrollHeight;
+      contentRef.current.scrollTop = contentRef.current.scrollHeight;
     }
   }, [messages]);
 
   const clearHistory = () => {
     localStorage.removeItem("chatHistory");
     setMessages([]);
+  };
+
+  const processMessageForContent = (message: string) => {
+    // Recherche de blocs de code avec indication de langage
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    let match;
+    let foundCode = false;
+
+    while ((match = codeBlockRegex.exec(message)) !== null) {
+      foundCode = true;
+      // match[0] est le bloc complet, match[1] est le langage, match[2] est le code
+      const language = match[1] || 'typescript';
+      const code = match[2].trim();
+
+      const contentData: ContentData = {
+        type: 'code',
+        content: code,
+        language: language,
+        metadata: {
+          artifact: {
+            identifier: `artifact-${Date.now()}`,
+            type: 'application/vnd.ant.code',
+            language: language,
+            title: 'Generated Code',
+            content: code,
+            isClosed: true
+          }
+        }
+      };
+      onContentGenerated(contentData);
+    }
+
+    // Si aucun code n'a été trouvé, traiter comme du markdown
+    if (!foundCode) {
+      const contentData: ContentData = {
+        type: 'markdown',
+        content: message,
+        metadata: {
+          artifact: {
+            identifier: `artifact-${Date.now()}`,
+            type: 'text/markdown',
+            title: 'Response',
+            content: message,
+            isClosed: true
+          }
+        }
+      };
+      onContentGenerated(contentData);
+    }
   };
 
   const handleSendMessage = async () => {
@@ -100,28 +143,6 @@ export const Chat = () => {
       setMessages(newMessages);
 
       localStorage.setItem("chatHistory", JSON.stringify(newMessages));
-
-      // Process the message for content
-      const processMessageForContent = (message: string) => {
-        // Détecter si le message contient du code
-        const codeMatch = message.match(/```(\w+)?\n([\s\S]*?)```/);
-        if (codeMatch) {
-          setContentData({
-            type: 'code',
-            content: codeMatch[2],
-            language: codeMatch[1] || 'typescript'
-          });
-          setShowContent(true);
-          return;
-        }
-
-        // Par défaut, afficher comme markdown
-        setContentData({
-          type: 'markdown',
-          content: message
-        });
-        setShowContent(true);
-      };
 
       processMessageForContent(fullResponse);
     } catch (error) {
@@ -215,11 +236,6 @@ export const Chat = () => {
           </div>
         </div>
       </div>
-      <ShowContent 
-        isShow={showContent}
-        contentData={contentData}
-        onClose={() => setShowContent(false)}
-      />
     </div>
   );
 };
