@@ -230,15 +230,15 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <div className="flex-1 p-6">
+    <div className="flex h-screen bg-slate-50">
+      <div className="flex-1 p-4">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white rounded-t-lg shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-800">Chat with Mia</h2>
+          <div className="flex justify-between items-center p-4 border-b border-slate-200 bg-white rounded-t-lg shadow-sm">
+            <h2 className="text-xl font-semibold text-slate-800">Chat with Mia</h2>
             <button
               onClick={clearHistory}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200"
+              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors duration-200"
             >
               Clear History
             </button>
@@ -249,15 +249,13 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
             {messages.map((message: Message, index: number) => (
               <div
                 key={`${message.timestamp ?? Date.now()}-${index}`}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[80%] rounded-lg p-4 ${
                     message.role === "user"
-                      ? "bg-blue-500 text-white"
-                      : "bg-white text-gray-800"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "bg-white text-slate-800 shadow-sm"
                   }`}
                 >
                   <div className="font-medium mb-1">
@@ -272,13 +270,13 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
           </div>
 
           {/* Input Area */}
-          <div className="p-4 border-t border-gray-200 bg-white">
+          <div className="p-4 border-t border-slate-200 bg-white rounded-b-lg">
             <div className="flex gap-2">
               <textarea
                 value={inputText}
                 onChange={(e) => setinputText(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[50px] max-h-[150px]"
+                className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[50px] max-h-[150px]"
                 placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
                 disabled={isLoading}
               />
@@ -287,8 +285,8 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
                 disabled={isLoading || !inputText.trim()}
                 className={`px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
                   isLoading || !inputText.trim()
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-500 text-white hover:bg-blue-600"
+                    ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
                 }`}
               >
                 {isLoading ? "Sending..." : "Send"}

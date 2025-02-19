@@ -6,7 +6,7 @@ import { ContentData } from './types';
 
 function App() {
   const [showContent, setShowContent] = useState(false);
-  const [contentData, setContentData] = useState<ContentData >();
+  const [contentData, setContentData] = useState<ContentData>();
 
   const handleContentGenerated = (data: ContentData) => {
     setContentData(data);
@@ -14,7 +14,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <CustomHeader isShow={showContent} setIsShow={setShowContent} />
       
       <div className="flex-1 flex">

@@ -4,6 +4,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Runner } from 'react-runner';
 import mermaid from 'mermaid';
+import * as Recharts from 'recharts';
+import * as LucideReact from 'lucide-react';
 
 interface CodeRunnerProps {
   code: string | React.ReactNode;
@@ -22,6 +24,7 @@ class ErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error) {
+    console.error('ErrorBoundary caught error:', error);
     return { hasError: true, error };
   }
 
@@ -61,13 +64,24 @@ const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) =>
   // Configurer le scope minimal
   const scope = {
     React,
+    ...React,  // Spread all React exports including hooks
     Fragment: React.Fragment,
     useState: React.useState,
+    useEffect: React.useEffect,
+    useRef: React.useRef,
+    useCallback: React.useCallback,
+    useMemo: React.useMemo,
+    ...Recharts,  // All Recharts components and utilities
+    ...LucideReact,  // All Lucide icons and components
   };
 
-  // Log pour debug
-  console.log('Code sans imports:', codeWithoutImports);
-  console.log('Scope configuré:', Object.keys(scope));
+  // Log détaillé du scope
+  // console.log('Scope détaillé:', {
+  //   recharts: Object.keys(Recharts).length,
+  //   reactHooks: ['useState', 'useEffect', 'useRef', 'useCallback', 'useMemo'].map(hook => !!scope[hook]),
+  //   pieChartAvailable: !!scope.PieChart,
+  //   responsiveContainerAvailable: !!scope.ResponsiveContainer,
+  // });
 
   try {
     // Vérifier si le code a un export default
@@ -81,16 +95,34 @@ const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) =>
     // Log pour debug
     console.log('Code final:', finalCode);
 
-    return (
-      <ErrorBoundary>
-        <div className="bg-white rounded-lg">
-          <Runner
-            code={finalCode}
-            scope={scope}
-          />
-        </div>
-      </ErrorBoundary>
-    );
+    const RunnerComponent = () => {
+      console.log('RunnerComponent rendu');
+      return (
+        <ErrorBoundary>
+          <div 
+            className="bg-white rounded-lg p-4" 
+            style={{ width: '100%', height: '400px' }}
+            ref={(el) => {
+              if (el) {
+                console.log('Container dimensions:', {
+                  width: el.clientWidth,
+                  height: el.clientHeight,
+                  offsetWidth: el.offsetWidth,
+                  offsetHeight: el.offsetHeight
+                });
+              }
+            }}
+          >
+            <Runner
+              code={finalCode}
+              scope={scope}
+            />
+          </div>
+        </ErrorBoundary>
+      );
+    };
+
+    return <RunnerComponent />;
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     console.error('Erreur dans CodeRunner:', errorMessage);
@@ -149,26 +181,26 @@ export const Canva: React.FC<CanvaProps> = ({ isShow, contentData, onClose }) =>
   if (!isShow) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-11/12 h-5/6 overflow-hidden flex flex-col relative">
-        <div className="flex items-center justify-between p-4 border-b">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl w-11/12 h-5/6 overflow-hidden flex flex-col relative shadow-xl">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <div className="flex space-x-2">
             <button
               onClick={() => setActiveTab('preview')}
-              className={`px-4 py-2 rounded ${
+              className={`px-4 py-2 rounded-lg transition-colors ${
                 activeTab === 'preview'
                   ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600'
+                  : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               Preview
             </button>
             <button
               onClick={() => setActiveTab('source')}
-              className={`px-4 py-2 rounded ${
+              className={`px-4 py-2 rounded-lg transition-colors ${
                 activeTab === 'source'
                   ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600'
+                  : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               Source
@@ -176,7 +208,7 @@ export const Canva: React.FC<CanvaProps> = ({ isShow, contentData, onClose }) =>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-slate-500 hover:text-slate-700 p-2 rounded-lg hover:bg-slate-100"
           >
             ✕
           </button>
