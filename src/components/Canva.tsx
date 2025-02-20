@@ -181,49 +181,47 @@ export const Canva: React.FC<CanvaProps> = ({ isShow, contentData, onClose }) =>
   if (!isShow) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-11/12 h-5/6 overflow-hidden flex flex-col relative shadow-xl">
-        <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setActiveTab('preview')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                activeTab === 'preview'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              Preview
-            </button>
-            <button
-              onClick={() => setActiveTab('source')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                activeTab === 'source'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              Source
-            </button>
-          </div>
+    <div className="h-full bg-white flex flex-col">
+      <div className="flex items-center justify-between p-4 border-b border-slate-200">
+        <div className="flex space-x-2">
           <button
-            onClick={onClose}
-            className="text-slate-500 hover:text-slate-700 p-2 rounded-lg hover:bg-slate-100"
+            onClick={() => setActiveTab('preview')}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'preview'
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
           >
-            ✕
+            Preview
+          </button>
+          <button
+            onClick={() => setActiveTab('source')}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'source'
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            Source
           </button>
         </div>
-        <div className="flex-1 overflow-auto p-4">
-          {contentData.type === 'mermaid' ? (
-            <MermaidRenderer code={contentData.content} activeTab={activeTab} />
-          ) : (
-            <CodeRunner
-              code={contentData.content}
-              language={contentData.language}
-              activeTab={activeTab}
-            />
-          )}
-        </div>
+        <button
+          onClick={onClose}
+          className="text-slate-500 hover:text-slate-700 p-2 rounded-lg hover:bg-slate-100"
+        >
+          ✕
+        </button>
+      </div>
+      <div className="flex-1 overflow-auto p-4">
+        {contentData.type === 'mermaid' ? (
+          <MermaidRenderer code={contentData.content} activeTab={activeTab} />
+        ) : (
+          <CodeRunner
+            code={contentData.content}
+            language={contentData.language}
+            activeTab={activeTab}
+          />
+        )}
       </div>
     </div>
   );
