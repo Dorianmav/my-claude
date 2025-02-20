@@ -14,7 +14,17 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
         remarkPlugins={[remarkEmoji]}
         className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
         components={{
-          code: CodeRenderer
+          code: CodeRenderer,
+          // Utiliser un div au lieu d'un p pour les paragraphes contenant du code
+          p: ({ children, ...props }) => {
+            const hasPreTag = React.Children.toArray(children).some(
+              child => React.isValidElement(child) && child.type === 'pre'
+            );
+            if (hasPreTag) {
+              return <div {...props}>{children}</div>;
+            }
+            return <p {...props}>{children}</p>;
+          }
         }}
       >
         {content}

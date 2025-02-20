@@ -27,11 +27,16 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  useEffect(() => {
+  // Optimisation du scroll automatique
+  const scrollToBottom = () => {
     if (contentRef.current) {
       contentRef.current.scrollTop = contentRef.current.scrollHeight;
     }
-  }, [messages]);
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages.length]); // Ne se déclenche que lorsqu'un nouveau message est ajouté
 
   const clearHistory = () => {
     localStorage.removeItem("chatHistory");
@@ -44,7 +49,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     let match = reactComponentRegex.exec(message);
     if (match) {
       const [, language, code] = match;
-      const contentData: ContentData = {
+      onContentGenerated({
         type: 'react-component',
         content: code.trim(),
         language,
@@ -58,8 +63,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
             isClosed: true
           }
         }
-      };
-      onContentGenerated(contentData);
+      });
       return;
     }
 
@@ -68,7 +72,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     match = mermaidRegex.exec(message);
     if (match) {
       const [, diagram] = match;
-      const contentData: ContentData = {
+      onContentGenerated({
         type: 'mermaid',
         content: diagram.trim(),
         metadata: {
@@ -80,8 +84,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
             isClosed: true
           }
         }
-      };
-      onContentGenerated(contentData);
+      });
       return;
     }
 
@@ -90,7 +93,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     match = codeBlockRegex.exec(message);
     if (match) {
       const [, language, code] = match;
-      const contentData: ContentData = {
+      onContentGenerated({
         type: 'code',
         content: code.trim(),
         language: language || 'typescript',
@@ -104,8 +107,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
             isClosed: true
           }
         }
-      };
-      onContentGenerated(contentData);
+      });
       return;
     }
 
@@ -114,7 +116,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     match = svgRegex.exec(message);
     if (match) {
       const [svg] = match;
-      const contentData: ContentData = {
+      onContentGenerated({
         type: 'svg',
         content: svg,
         metadata: {
@@ -126,13 +128,12 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
             isClosed: true
           }
         }
-      };
-      onContentGenerated(contentData);
+      });
       return;
     }
 
     // Par défaut, traiter comme du markdown
-    const contentData: ContentData = {
+    onContentGenerated({
       type: 'markdown',
       content: message,
       metadata: {
@@ -144,12 +145,11 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
           isClosed: true
         }
       }
-    };
-    onContentGenerated(contentData);
+    });
   };
 
   const handleSendMessage = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isLoading) return;
 
     const userMessage: Message = {
       role: "user",
@@ -157,13 +157,12 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
       timestamp: new Date().toISOString(),
     };
 
+    setinputText(""); // Reset input immediately for better UX
+    setIsLoading(true);
+
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     localStorage.setItem("chatHistory", JSON.stringify(updatedMessages));
-    setinputText("");
-
-    // Send the message to groq
-    setIsLoading(true);
 
     try {
       const chatCompletion = await groq.chat.completions.create({
@@ -181,39 +180,35 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
       });
 
       let fullResponse = "";
-      let assistantMessage: Message = {
+      const assistantMessage: Message = {
         role: "assistant",
         content: "",
         timestamp: new Date().toISOString(),
       };
 
+      // Optimisation de la mise à jour des messages pendant le streaming
       for await (const chunk of chatCompletion) {
         const content = chunk.choices[0]?.delta?.content ?? "";
         fullResponse += content;
         assistantMessage.content = fullResponse;
-        setMessages([...updatedMessages, { ...assistantMessage }]);
+        
+        // Mise à jour moins fréquente pendant le streaming
+        if (content.includes("\n") || content.length > 50) {
+          setMessages([...updatedMessages, { ...assistantMessage }]);
+        }
       }
 
-      assistantMessage = {
-        role: "assistant",
-        content: fullResponse,
-        timestamp: new Date().toISOString(),
-      };
-
-      const newMessages = [...updatedMessages, assistantMessage];
+      // Mise à jour finale avec le message complet
+      const newMessages = [...updatedMessages, { ...assistantMessage, content: fullResponse }];
       setMessages(newMessages);
-
       localStorage.setItem("chatHistory", JSON.stringify(newMessages));
-
       processMessageForContent(fullResponse);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error("Error: ", error);
-
       const errorMessage: Message = {
         role: "system",
         content: "Error occured while fetching response",
       };
-
       const finalMessages = [...updatedMessages, errorMessage];
       setMessages(finalMessages);
       localStorage.setItem("chatHistory", JSON.stringify(finalMessages));

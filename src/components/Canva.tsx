@@ -55,9 +55,6 @@ const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) =>
     );
   }
 
-  // Log pour debug
-  console.log('Code original:', code);
-
   // Supprimer les imports car on fournit déjà les dépendances dans le scope
   const codeWithoutImports = code.replace(/import.*?;(\n|$)/g, '').trim();
 
@@ -75,14 +72,6 @@ const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) =>
     ...LucideReact,  // All Lucide icons and components
   };
 
-  // Log détaillé du scope
-  // console.log('Scope détaillé:', {
-  //   recharts: Object.keys(Recharts).length,
-  //   reactHooks: ['useState', 'useEffect', 'useRef', 'useCallback', 'useMemo'].map(hook => !!scope[hook]),
-  //   pieChartAvailable: !!scope.PieChart,
-  //   responsiveContainerAvailable: !!scope.ResponsiveContainer,
-  // });
-
   try {
     // Vérifier si le code a un export default
     let finalCode = codeWithoutImports;
@@ -92,26 +81,12 @@ const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) =>
       finalCode = `${finalCode}\n\nexport default ${componentName};`;
     }
 
-    // Log pour debug
-    console.log('Code final:', finalCode);
-
     const RunnerComponent = () => {
-      console.log('RunnerComponent rendu');
       return (
         <ErrorBoundary>
           <div 
             className="bg-white rounded-lg p-4" 
             style={{ width: '100%', height: '400px' }}
-            ref={(el) => {
-              if (el) {
-                console.log('Container dimensions:', {
-                  width: el.clientWidth,
-                  height: el.clientHeight,
-                  offsetWidth: el.offsetWidth,
-                  offsetHeight: el.offsetHeight
-                });
-              }
-            }}
           >
             <Runner
               code={finalCode}
