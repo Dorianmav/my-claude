@@ -33,19 +33,19 @@ const CodeRenderer: React.FC<CodeRendererProps> = ({
 
   // Utiliser un fragment au lieu d'un div pour éviter les problèmes de nesting
   return (
-    <div className="relative group mt-4 mb-4">
-        <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
-          <CopyButton code={code} />
-        </div>
-        <SyntaxHighlighter
-          style={vs}
-          language={language}
-          className="!my-0 !bg-gray-50 !rounded-lg"
-          PreTag="div"
-        >
-          {code}
-        </SyntaxHighlighter>
+    <pre className="relative group mt-4 mb-4">
+      <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+        <CopyButton code={code} />
       </div>
+      <SyntaxHighlighter
+        style={vs}
+        language={language}
+        className="!my-0 !bg-gray-50 !rounded-lg"
+        PreTag="div"
+      >
+        {code}
+      </SyntaxHighlighter>
+    </pre>
   );
 };
 
