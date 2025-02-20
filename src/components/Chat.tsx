@@ -30,13 +30,16 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   // Optimisation du scroll automatique
   const scrollToBottom = () => {
     if (contentRef.current) {
-      contentRef.current.scrollTop = contentRef.current.scrollHeight;
+      const isAtBottom = contentRef.current.scrollHeight - contentRef.current.scrollTop <= contentRef.current.clientHeight + 100;
+      if (isAtBottom) {
+        contentRef.current.scrollTop = contentRef.current.scrollHeight;
+      }
     }
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages.length]); // Ne se déclenche que lorsqu'un nouveau message est ajouté
+  }, [messages]); // Se déclenche à chaque mise à jour des messages
 
   const clearHistory = () => {
     localStorage.removeItem("chatHistory");
@@ -187,14 +190,17 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
       };
 
       // Optimisation de la mise à jour des messages pendant le streaming
+      let lastUpdate = Date.now();
       for await (const chunk of chatCompletion) {
         const content = chunk.choices[0]?.delta?.content ?? "";
         fullResponse += content;
         assistantMessage.content = fullResponse;
         
-        // Mise à jour moins fréquente pendant le streaming
-        if (content.includes("\n") || content.length > 50) {
+        // Mise à jour plus fréquente pendant le streaming
+        const now = Date.now();
+        if (now - lastUpdate > 50) { // Mise à jour toutes les 50ms
           setMessages([...updatedMessages, { ...assistantMessage }]);
+          lastUpdate = now;
         }
       }
 

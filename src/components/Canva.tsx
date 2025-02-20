@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ContentData } from '../types';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Runner } from 'react-runner';
-import mermaid from 'mermaid';
 import * as Recharts from 'recharts';
 import * as LucideReact from 'lucide-react';
+import mermaid from 'mermaid';
 
 interface CodeRunnerProps {
   code: string | React.ReactNode;
@@ -41,6 +41,36 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+interface PreviewComponentProps {
+  code: string;
+  scope: Record<string, unknown>;
+}
+
+const PreviewComponent: React.FC<PreviewComponentProps> = ({ code, scope }) => {
+  return (
+    <ErrorBoundary>
+      <div 
+        className="w-full h-full flex items-center justify-center bg-white p-4 rounded-lg"
+        style={{ width: '100%', height: '400px' }}
+      >
+        <div className="w-full h-full">
+          <style>
+            {`
+              @tailwind base;
+              @tailwind components;
+              @tailwind utilities;
+            `}
+          </style>
+          <Runner
+            code={code}
+            scope={scope}
+          />
+        </div>
+      </div>
+    </ErrorBoundary>
+  );
+};
+
 const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) => {
   // Afficher le code source
   if (activeTab === 'source' || typeof code !== 'string') {
@@ -58,46 +88,35 @@ const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) =>
   // Supprimer les imports car on fournit déjà les dépendances dans le scope
   const codeWithoutImports = code.replace(/import.*?;(\n|$)/g, '').trim();
 
-  // Configurer le scope minimal
+  // Définir le scope avec toutes les dépendances nécessaires
   const scope = {
     React,
-    ...React,  // Spread all React exports including hooks
-    Fragment: React.Fragment,
-    useState: React.useState,
-    useEffect: React.useEffect,
-    useRef: React.useRef,
-    useCallback: React.useCallback,
-    useMemo: React.useMemo,
+    useState,
+    useEffect,
+    useRef,
+    useCallback,
+    useMemo,
     ...Recharts,  // All Recharts components and utilities
     ...LucideReact,  // All Lucide icons and components
+    // Ajouter une fonction pour créer des éléments stylisés avec Tailwind
+    tw: (className: string) => ({ className }),
+    // Ajouter un composant wrapper pour appliquer les styles Tailwind
+    TailwindWrapper: ({ children, className }: { children: React.ReactNode, className?: string }) => (
+      <div className={className}>{children}</div>
+    )
   };
 
   try {
     // Vérifier si le code a un export default
     let finalCode = codeWithoutImports;
     if (!finalCode.includes('export default')) {
-      const matches = finalCode.match(/(?:function|const)\s+(\w+)/);
+      const regex = /(?:function|const)\s+(\w+)/;
+      const matches = regex.exec(finalCode);
       const componentName = matches ? matches[1] : 'Component';
       finalCode = `${finalCode}\n\nexport default ${componentName};`;
     }
 
-    const RunnerComponent = () => {
-      return (
-        <ErrorBoundary>
-          <div 
-            className="bg-white rounded-lg p-4" 
-            style={{ width: '100%', height: '400px' }}
-          >
-            <Runner
-              code={finalCode}
-              scope={scope}
-            />
-          </div>
-        </ErrorBoundary>
-      );
-    };
-
-    return <RunnerComponent />;
+    return <PreviewComponent code={finalCode} scope={scope} />;
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     console.error('Erreur dans CodeRunner:', errorMessage);
@@ -115,7 +134,9 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code, activeTab }) =>
 
   React.useEffect(() => {
     if (activeTab === 'preview' && mermaidRef.current) {
-      mermaid.init(undefined, mermaidRef.current);
+      mermaid.run({
+        nodes: [mermaidRef.current]
+      });
     }
   }, [activeTab, code]);
 
@@ -142,12 +163,12 @@ interface CanvaProps {
   contentData: ContentData;
 }
 
-// Initialize mermaid with specific configuration
+// Configure mermaid with specific settings
 mermaid.initialize({
   startOnLoad: true,
   theme: 'default',
   securityLevel: 'loose',
-  fontFamily: 'monospace',
+  fontFamily: 'sans-serif'
 });
 
 export const Canva: React.FC<CanvaProps> = ({ isShow, contentData, onClose }) => {
