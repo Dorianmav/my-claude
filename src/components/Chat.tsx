@@ -230,22 +230,23 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50">
-      <div className="flex-1 p-4">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex justify-between items-center p-4 border-b border-slate-200 bg-white rounded-t-lg shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-800">Chat with Mia</h2>
-            <button
-              onClick={clearHistory}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors duration-200"
-            >
-              Clear History
-            </button>
-          </div>
+    <div className="h-full flex flex-col bg-slate-50">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4 border-b border-slate-200 bg-white rounded-t-lg shadow-sm">
+        <h2 className="text-xl font-semibold text-slate-800">Chat with Mia</h2>
+        <button
+          onClick={clearHistory}
+          className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors duration-200"
+        >
+          Clear History
+        </button>
+      </div>
 
-          {/* Chat History */}
-          <div ref={contentRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Chat History - Container */}
+      <div className="flex-1 relative">
+        {/* Scrollable Messages Area */}
+        <div ref={contentRef} className="absolute inset-0 overflow-y-auto">
+          <div className="p-4 space-y-4">
             {messages.map((message: Message, index: number) => (
               <div
                 key={`${message.timestamp ?? Date.now()}-${index}`}
@@ -268,31 +269,31 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
               </div>
             ))}
           </div>
+        </div>
+      </div>
 
-          {/* Input Area */}
-          <div className="p-4 border-t border-slate-200 bg-white rounded-b-lg">
-            <div className="flex gap-2">
-              <textarea
-                value={inputText}
-                onChange={(e) => setinputText(e.target.value)}
-                onKeyDown={handleKeyPress}
-                className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[50px] max-h-[150px]"
-                placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
-                disabled={isLoading}
-              />
-              <button
-                onClick={handleSendMessage}
-                disabled={isLoading || !inputText.trim()}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
-                  isLoading || !inputText.trim()
-                    ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
-              >
-                {isLoading ? "Sending..." : "Send"}
-              </button>
-            </div>
-          </div>
+      {/* Input Area */}
+      <div className="p-4 border-t border-slate-200 bg-white rounded-b-lg">
+        <div className="flex gap-2">
+          <textarea
+            value={inputText}
+            onChange={(e) => setinputText(e.target.value)}
+            onKeyDown={handleKeyPress}
+            className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[50px] max-h-[150px]"
+            placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
+            disabled={isLoading}
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={isLoading || !inputText.trim()}
+            className={`px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
+              isLoading || !inputText.trim()
+                ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            }`}
+          >
+            {isLoading ? "Sending..." : "Send"}
+          </button>
         </div>
       </div>
     </div>
