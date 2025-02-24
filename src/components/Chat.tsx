@@ -19,7 +19,7 @@ const groq = new Groq({
 });
 
 export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
-  const [inputText, setinputText] = useState("");
+  const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -160,7 +160,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
       timestamp: new Date().toISOString(),
     };
 
-    setinputText(""); // Reset input immediately for better UX
+    setInputText(""); // Reset input immediately for better UX
     setIsLoading(true);
 
     const updatedMessages = [...messages, userMessage];
@@ -278,7 +278,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
         <div className="flex gap-2">
           <textarea
             value={inputText}
-            onChange={(e) => setinputText(e.target.value)}
+            onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyPress}
             className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[50px] max-h-[150px]"
             placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"

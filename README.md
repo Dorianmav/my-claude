@@ -1,6 +1,6 @@
 # Environnement d'Exécution React Interactif
 
-## Vue d'ensemble
+## 🎯 Vue d'ensemble
 
 Ce projet est un environnement d'exécution interactif pour les composants React. Il permet de :
 - Afficher le code source avec coloration syntaxique
@@ -10,8 +10,17 @@ Ce projet est un environnement d'exécution interactif pour les composants React
 - Support complet de Tailwind CSS dans le preview
 - Rendu de diagrammes Mermaid
 - Chat interactif avec streaming des réponses
+- Support avancé des graphiques Recharts avec mise en page responsive
 
-## Structure du Projet
+## 🚀 Améliorations Récentes
+
+- ✨ Optimisation des performances avec suppression des logs inutiles
+- 🏗️ Meilleure organisation des composants (séparation des composants imbriqués)
+- 🎨 Support amélioré des graphiques Recharts avec ResponsiveContainer
+- 🔧 Correction des conventions de nommage React (useState setters)
+- 💅 Amélioration de la qualité du code et respect des meilleures pratiques
+
+## 🏗️ Structure du Projet
 
 ### 1. Composants Principaux
 
