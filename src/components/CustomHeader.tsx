@@ -9,16 +9,16 @@ const CustomHeader = ({ isShow, setIsShow }: CustomHeaderProps) => {
         setIsShow(!isShow);
     }
   return (
-    <div className="w-full flex justify-between p-4">
+    <div className="w-full flex justify-between items-center p-4 bg-white shadow-sm">
       <div className="text-center">
-        <h1 className="text-3xl font-bold justify-center">
+        <h1 className="text-3xl font-bold text-slate-800">
           Chat with Mia Claude
         </h1>
-        <p>Initialisation du projet avec TS React et Tailwind</p>
+        <p className="text-slate-600">Initialisation du projet avec TS React et Tailwind</p>
       </div>
-      <div className="flex justify-center mt-4">
+      <div className="flex items-center">
         <button
-          className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-2 rounded flex items-center justify-center"
+          className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium p-2.5 rounded-lg transition-colors duration-200 flex items-center justify-center"
           onClick={handleShow}
         >
           <svg

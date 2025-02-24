@@ -19,7 +19,7 @@ const groq = new Groq({
 });
 
 export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
-  const [inputText, setinputText] = useState("");
+  const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -27,11 +27,19 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  useEffect(() => {
+  // Optimisation du scroll automatique
+  const scrollToBottom = () => {
     if (contentRef.current) {
-      contentRef.current.scrollTop = contentRef.current.scrollHeight;
+      const isAtBottom = contentRef.current.scrollHeight - contentRef.current.scrollTop <= contentRef.current.clientHeight + 100;
+      if (isAtBottom) {
+        contentRef.current.scrollTop = contentRef.current.scrollHeight;
+      }
     }
-  }, [messages]);
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]); // Se déclenche à chaque mise à jour des messages
 
   const clearHistory = () => {
     localStorage.removeItem("chatHistory");
@@ -44,7 +52,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     let match = reactComponentRegex.exec(message);
     if (match) {
       const [, language, code] = match;
-      const contentData: ContentData = {
+      onContentGenerated({
         type: 'react-component',
         content: code.trim(),
         language,
@@ -58,8 +66,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
             isClosed: true
           }
         }
-      };
-      onContentGenerated(contentData);
+      });
       return;
     }
 
@@ -68,7 +75,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     match = mermaidRegex.exec(message);
     if (match) {
       const [, diagram] = match;
-      const contentData: ContentData = {
+      onContentGenerated({
         type: 'mermaid',
         content: diagram.trim(),
         metadata: {
@@ -80,8 +87,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
             isClosed: true
           }
         }
-      };
-      onContentGenerated(contentData);
+      });
       return;
     }
 
@@ -90,7 +96,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     match = codeBlockRegex.exec(message);
     if (match) {
       const [, language, code] = match;
-      const contentData: ContentData = {
+      onContentGenerated({
         type: 'code',
         content: code.trim(),
         language: language || 'typescript',
@@ -104,8 +110,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
             isClosed: true
           }
         }
-      };
-      onContentGenerated(contentData);
+      });
       return;
     }
 
@@ -114,7 +119,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     match = svgRegex.exec(message);
     if (match) {
       const [svg] = match;
-      const contentData: ContentData = {
+      onContentGenerated({
         type: 'svg',
         content: svg,
         metadata: {
@@ -126,13 +131,12 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
             isClosed: true
           }
         }
-      };
-      onContentGenerated(contentData);
+      });
       return;
     }
 
     // Par défaut, traiter comme du markdown
-    const contentData: ContentData = {
+    onContentGenerated({
       type: 'markdown',
       content: message,
       metadata: {
@@ -144,12 +148,11 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
           isClosed: true
         }
       }
-    };
-    onContentGenerated(contentData);
+    });
   };
 
   const handleSendMessage = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isLoading) return;
 
     const userMessage: Message = {
       role: "user",
@@ -157,13 +160,12 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
       timestamp: new Date().toISOString(),
     };
 
+    setInputText(""); // Reset input immediately for better UX
+    setIsLoading(true);
+
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     localStorage.setItem("chatHistory", JSON.stringify(updatedMessages));
-    setinputText("");
-
-    // Send the message to groq
-    setIsLoading(true);
 
     try {
       const chatCompletion = await groq.chat.completions.create({
@@ -181,39 +183,38 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
       });
 
       let fullResponse = "";
-      let assistantMessage: Message = {
+      const assistantMessage: Message = {
         role: "assistant",
         content: "",
         timestamp: new Date().toISOString(),
       };
 
+      // Optimisation de la mise à jour des messages pendant le streaming
+      let lastUpdate = Date.now();
       for await (const chunk of chatCompletion) {
         const content = chunk.choices[0]?.delta?.content ?? "";
         fullResponse += content;
         assistantMessage.content = fullResponse;
-        setMessages([...updatedMessages, { ...assistantMessage }]);
+        
+        // Mise à jour plus fréquente pendant le streaming
+        const now = Date.now();
+        if (now - lastUpdate > 50) { // Mise à jour toutes les 50ms
+          setMessages([...updatedMessages, { ...assistantMessage }]);
+          lastUpdate = now;
+        }
       }
 
-      assistantMessage = {
-        role: "assistant",
-        content: fullResponse,
-        timestamp: new Date().toISOString(),
-      };
-
-      const newMessages = [...updatedMessages, assistantMessage];
+      // Mise à jour finale avec le message complet
+      const newMessages = [...updatedMessages, { ...assistantMessage, content: fullResponse }];
       setMessages(newMessages);
-
       localStorage.setItem("chatHistory", JSON.stringify(newMessages));
-
       processMessageForContent(fullResponse);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error("Error: ", error);
-
       const errorMessage: Message = {
         role: "system",
         content: "Error occured while fetching response",
       };
-
       const finalMessages = [...updatedMessages, errorMessage];
       setMessages(finalMessages);
       localStorage.setItem("chatHistory", JSON.stringify(finalMessages));
@@ -230,34 +231,33 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <div className="flex-1 p-6">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white rounded-t-lg shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-800">Chat with Mia</h2>
-            <button
-              onClick={clearHistory}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200"
-            >
-              Clear History
-            </button>
-          </div>
+    <div className="h-full flex flex-col bg-slate-50">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4 border-b border-slate-200 bg-white rounded-t-lg shadow-sm">
+        <h2 className="text-xl font-semibold text-slate-800">Chat with Mia</h2>
+        <button
+          onClick={clearHistory}
+          className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors duration-200"
+        >
+          Clear History
+        </button>
+      </div>
 
-          {/* Chat History */}
-          <div ref={contentRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Chat History - Container */}
+      <div className="flex-1 relative">
+        {/* Scrollable Messages Area */}
+        <div ref={contentRef} className="absolute inset-0 overflow-y-auto">
+          <div className="p-4 space-y-4">
             {messages.map((message: Message, index: number) => (
               <div
                 key={`${message.timestamp ?? Date.now()}-${index}`}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[80%] rounded-lg p-4 ${
                     message.role === "user"
-                      ? "bg-blue-500 text-white"
-                      : "bg-white text-gray-800"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "bg-white text-slate-800 shadow-sm"
                   }`}
                 >
                   <div className="font-medium mb-1">
@@ -270,31 +270,31 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
               </div>
             ))}
           </div>
+        </div>
+      </div>
 
-          {/* Input Area */}
-          <div className="p-4 border-t border-gray-200 bg-white">
-            <div className="flex gap-2">
-              <textarea
-                value={inputText}
-                onChange={(e) => setinputText(e.target.value)}
-                onKeyDown={handleKeyPress}
-                className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[50px] max-h-[150px]"
-                placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
-                disabled={isLoading}
-              />
-              <button
-                onClick={handleSendMessage}
-                disabled={isLoading || !inputText.trim()}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
-                  isLoading || !inputText.trim()
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-500 text-white hover:bg-blue-600"
-                }`}
-              >
-                {isLoading ? "Sending..." : "Send"}
-              </button>
-            </div>
-          </div>
+      {/* Input Area */}
+      <div className="p-4 border-t border-slate-200 bg-white rounded-b-lg">
+        <div className="flex gap-2">
+          <textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={handleKeyPress}
+            className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[50px] max-h-[150px]"
+            placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
+            disabled={isLoading}
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={isLoading || !inputText.trim()}
+            className={`px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
+              isLoading || !inputText.trim()
+                ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            }`}
+          >
+            {isLoading ? "Sending..." : "Send"}
+          </button>
         </div>
       </div>
     </div>

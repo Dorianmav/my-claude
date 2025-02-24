@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
-import { ContentData } from '../types';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Runner } from 'react-runner';
-import mermaid from 'mermaid';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import { ContentData } from "../types";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { Runner } from "react-runner";
+import * as Recharts from "recharts";
+import * as LucideReact from "lucide-react";
+import mermaid from "mermaid";
 
 interface CodeRunnerProps {
   code: string | React.ReactNode;
   language?: string;
-  activeTab: 'source' | 'preview';
+  activeTab: "source" | "preview";
 }
 
 // Composant ErrorBoundary pour gérer les erreurs de rendu
@@ -28,8 +36,9 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-4 bg-red-100 text-red-700 rounded">
-          {this.state.error?.message}
+        <div className="p-4 text-red-600 bg-red-50 rounded-lg">
+          <h3 className="font-semibold mb-2">Error rendering component:</h3>
+          <pre className="text-sm">{this.state.error?.message}</pre>
         </div>
       );
     }
@@ -38,12 +47,111 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) => {
-  // Afficher le code source
-  if (activeTab === 'source' || typeof code !== 'string') {
+interface PreviewComponentProps {
+  code: string;
+  scope: Record<string, unknown>;
+}
+
+const PreviewComponent: React.FC<PreviewComponentProps> = ({ code, scope }) => {
+
+  // Supprimer les imports et logger le code modifié
+  const modifiedCode = code.replace(/import[\s\S]*?from.*?;(\n|$)/g, "").trim();
+
+  // Détecter si le code contient un graphique Recharts
+  const hasRechartsChart = /(\w+Chart|Pie)\s+data=/.test(modifiedCode);
+
+  // Si c'est un graphique Recharts, l'encapsuler dans un ResponsiveContainer
+  let finalCode = modifiedCode;
+  if (hasRechartsChart && !modifiedCode.includes('ResponsiveContainer')) {
+    // Trouver le return statement
+    const returnMatch = (/return\s*\(([\s\S]*?)\);/).exec(modifiedCode);
+    if (returnMatch) {
+      const chartJSX = returnMatch[1];
+      finalCode = modifiedCode.replace(
+        /return\s*\(([\s\S]*?)\);/,
+        `return (
+          <div style={{ width: '100%', height: 400 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              ${chartJSX}
+            </ResponsiveContainer>
+          </div>
+        );`
+      );
+    }
+  }
+
+  return (
+    <ErrorBoundary>
+      <div
+        className="w-full h-full flex items-center justify-center bg-white p-4 rounded-lg"
+        style={{ width: "100%", height: "400px" }}
+      >
+        <div className="w-full h-full" style={{ minHeight: "300px" }}>
+          <style>
+            {`
+              @tailwind base;
+              @tailwind components;
+              @tailwind utilities;
+            `}
+          </style>
+          <Runner
+            code={finalCode}
+            scope={{
+              ...scope,
+              ResponsiveContainer: Recharts.ResponsiveContainer,
+              LineChart: Recharts.LineChart,
+              BarChart: Recharts.BarChart,
+              PieChart: Recharts.PieChart,
+              ScatterChart: Recharts.ScatterChart,
+              RadialBarChart: Recharts.RadialBarChart,
+              AreaChart: Recharts.AreaChart,
+              ComposedChart: Recharts.ComposedChart,
+              RadarChart: Recharts.RadarChart,
+              Line: Recharts.Line,
+              Bar: Recharts.Bar,
+              Pie: Recharts.Pie,
+              Scatter: Recharts.Scatter,
+              RadialBar: Recharts.RadialBar,
+              Area: Recharts.Area,
+              Radar: Recharts.Radar,
+              XAxis: Recharts.XAxis,
+              YAxis: Recharts.YAxis,
+              Tooltip: Recharts.Tooltip,
+              Legend: Recharts.Legend,
+              Cell: Recharts.Cell,
+              Sector: Recharts.Sector,
+              CartesianGrid: Recharts.CartesianGrid,
+              PolarGrid: Recharts.PolarGrid,
+              PolarAngleAxis: Recharts.PolarAngleAxis,
+              PolarRadiusAxis: Recharts.PolarRadiusAxis,
+              Surface: Recharts.Surface,
+              Symbols: Recharts.Symbols,
+              console: console,
+            }}
+          />
+        </div>
+      </div>
+    </ErrorBoundary>
+  );
+};
+
+// TailwindWrapper component for applying Tailwind styles
+const TailwindWrapper: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className }) => (
+  <div className={className}>{children}</div>
+);
+
+const CodeRunner: React.FC<CodeRunnerProps> = ({
+  code,
+  language,
+  activeTab,
+}) => {
+  if (activeTab === "source") {
     return (
-      <SyntaxHighlighter 
-        language={language ?? 'typescript'} 
+      <SyntaxHighlighter
+        language={language ?? "typescript"}
         style={vscDarkPlus}
         className="rounded-lg"
       >
@@ -52,79 +160,79 @@ const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) =>
     );
   }
 
-  // Log pour debug
-  console.log('Code original:', code);
-
   // Supprimer les imports car on fournit déjà les dépendances dans le scope
-  const codeWithoutImports = code.replace(/import.*?;(\n|$)/g, '').trim();
+  const codeWithoutImports = String(code)
+    .replace(/import.*?;(\n|$)/g, "")
+    .trim();
 
-  // Configurer le scope minimal
+  // Définir le scope avec les dépendances de base nécessaires
   const scope = {
     React,
-    Fragment: React.Fragment,
-    useState: React.useState,
+    useState,
+    useEffect,
+    useRef,
+    useCallback,
+    useMemo,
+    ...LucideReact, // All Lucide icons and components
+    // Ajouter une fonction pour créer des éléments stylisés avec Tailwind
+    tw: (className: string) => ({ className }),
+    // Use the TailwindWrapper component from the outer scope
+    TailwindWrapper,
   };
-
-  // Log pour debug
-  console.log('Code sans imports:', codeWithoutImports);
-  console.log('Scope configuré:', Object.keys(scope));
 
   try {
     // Vérifier si le code a un export default
     let finalCode = codeWithoutImports;
-    if (!finalCode.includes('export default')) {
-      const matches = finalCode.match(/(?:function|const)\s+(\w+)/);
-      const componentName = matches ? matches[1] : 'Component';
+    if (!finalCode.includes("export default")) {
+      const regex = /(?:function|const)\s+(\w+)/;
+      const matches = regex.exec(finalCode);
+      const componentName = matches ? matches[1] : "Component";
       finalCode = `${finalCode}\n\nexport default ${componentName};`;
     }
 
-    // Log pour debug
-    console.log('Code final:', finalCode);
-
+    return <PreviewComponent code={finalCode} scope={scope} />;
+  } catch (error) {
     return (
-      <ErrorBoundary>
-        <div className="bg-white rounded-lg">
-          <Runner
-            code={finalCode}
-            scope={scope}
-          />
-        </div>
-      </ErrorBoundary>
+      <div className="p-4 text-red-600 bg-red-50 rounded-lg">
+        <h3 className="font-semibold mb-2">Error processing code:</h3>
+        <pre className="text-sm">{String(error)}</pre>
+      </div>
     );
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error('Erreur dans CodeRunner:', errorMessage);
-    return <div className="p-4 bg-red-100 text-red-700 rounded">{errorMessage}</div>;
   }
 };
 
 interface MermaidRendererProps {
   code: string | React.ReactNode;
-  activeTab: 'source' | 'preview';
+  activeTab: "source" | "preview";
 }
 
-const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code, activeTab }) => {
+const MermaidRenderer: React.FC<MermaidRendererProps> = ({
+  code,
+  activeTab,
+}) => {
   const mermaidRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (activeTab === 'preview' && mermaidRef.current) {
-      mermaid.init(undefined, mermaidRef.current);
+    if (activeTab === "preview" && mermaidRef.current) {
+      mermaid.run({
+        nodes: [mermaidRef.current],
+      });
     }
   }, [activeTab, code]);
 
-  const codeString = typeof code === 'string' ? code : '';
-
-  if (activeTab === 'source') {
+  if (activeTab === "source") {
     return (
       <SyntaxHighlighter language="mermaid" style={vscDarkPlus}>
-        {codeString}
+        {String(code)}
       </SyntaxHighlighter>
     );
   }
 
   return (
-    <div className="mermaid" ref={mermaidRef}>
-      {codeString}
+    <div className="flex items-center justify-center p-4">
+      <div ref={mermaidRef} className="mermaid">
+        {String(code)}
+      </div>
     </div>
   );
 };
@@ -135,63 +243,65 @@ interface CanvaProps {
   contentData: ContentData;
 }
 
-// Initialize mermaid with specific configuration
+// Configure mermaid with specific settings
 mermaid.initialize({
   startOnLoad: true,
-  theme: 'default',
-  securityLevel: 'loose',
-  fontFamily: 'monospace',
+  theme: "default",
+  securityLevel: "loose",
+  fontFamily: "sans-serif",
 });
 
-export const Canva: React.FC<CanvaProps> = ({ isShow, contentData, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'source' | 'preview'>('preview');
+export const Canva: React.FC<CanvaProps> = ({
+  isShow,
+  contentData,
+  onClose,
+}) => {
+  const [activeTab, setActiveTab] = useState<"source" | "preview">("preview");
 
   if (!isShow) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-11/12 h-5/6 overflow-hidden flex flex-col relative">
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setActiveTab('preview')}
-              className={`px-4 py-2 rounded ${
-                activeTab === 'preview'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600'
-              }`}
-            >
-              Preview
-            </button>
-            <button
-              onClick={() => setActiveTab('source')}
-              className={`px-4 py-2 rounded ${
-                activeTab === 'source'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600'
-              }`}
-            >
-              Source
-            </button>
-          </div>
+    <div className="h-full bg-white flex flex-col">
+      <div className="flex items-center justify-between p-4 border-b border-slate-200">
+        <div className="flex space-x-2">
           <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            onClick={() => setActiveTab("preview")}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              activeTab === "preview"
+                ? "bg-blue-100 text-blue-700"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
           >
-            ✕
+            Preview
+          </button>
+          <button
+            onClick={() => setActiveTab("source")}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              activeTab === "source"
+                ? "bg-blue-100 text-blue-700"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            Source
           </button>
         </div>
-        <div className="flex-1 overflow-auto p-4">
-          {contentData.type === 'mermaid' ? (
-            <MermaidRenderer code={contentData.content} activeTab={activeTab} />
-          ) : (
-            <CodeRunner
-              code={contentData.content}
-              language={contentData.language}
-              activeTab={activeTab}
-            />
-          )}
-        </div>
+        <button
+          onClick={onClose}
+          className="text-slate-500 hover:text-slate-700 p-2 rounded-lg hover:bg-slate-100"
+        >
+          ✕
+        </button>
+      </div>
+      <div className="flex-1 overflow-auto p-4">
+        {contentData.type === "mermaid" ? (
+          <MermaidRenderer code={contentData.content} activeTab={activeTab} />
+        ) : (
+          <CodeRunner
+            code={contentData.content}
+            language={contentData.language}
+            activeTab={activeTab}
+          />
+        )}
       </div>
     </div>
   );
