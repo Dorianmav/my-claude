@@ -12,6 +12,7 @@ import { Runner } from "react-runner";
 import * as Recharts from "recharts";
 import * as LucideReact from "lucide-react";
 import mermaid from "mermaid";
+import MermaidDiagram from './MermaidDiagram'; // Import the new MermaidDiagram component
 
 interface CodeRunnerProps {
   code: string | React.ReactNode;
@@ -206,35 +207,16 @@ interface MermaidRendererProps {
   activeTab: "source" | "preview";
 }
 
-const MermaidRenderer: React.FC<MermaidRendererProps> = ({
-  code,
-  activeTab,
-}) => {
-  const mermaidRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    if (activeTab === "preview" && mermaidRef.current) {
-      mermaid.run({
-        nodes: [mermaidRef.current],
-      });
-    }
-  }, [activeTab, code]);
-
+const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code, activeTab }) => {
   if (activeTab === "source") {
     return (
-      <SyntaxHighlighter language="mermaid" style={vscDarkPlus}>
-        {String(code)}
-      </SyntaxHighlighter>
+      <div className="p-4">
+        <pre className="whitespace-pre-wrap">{code}</pre>
+      </div>
     );
   }
 
-  return (
-    <div className="flex items-center justify-center p-4">
-      <div ref={mermaidRef} className="mermaid">
-        {String(code)}
-      </div>
-    </div>
-  );
+  return <MermaidDiagram code={code as string} />;
 };
 
 interface CanvaProps {
