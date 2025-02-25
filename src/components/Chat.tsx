@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, KeyboardEvent } from "react";
 import Groq from "groq-sdk";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { ContentData } from '../types';
+import CodePreview from './CodePreview';
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -49,106 +50,24 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   const processMessageForContent = (message: string) => {
     // Recherche de blocs de code React
     const reactComponentRegex = /```(jsx|tsx)\n([\s\S]*?)```/g;
-    let match = reactComponentRegex.exec(message);
-    if (match) {
-      const [, language, code] = match;
+    let match;
+
+    while ((match = reactComponentRegex.exec(message)) !== null) {
       onContentGenerated({
-        type: 'react-component',
-        content: code.trim(),
-        language,
-        metadata: {
-          artifact: {
-            identifier: `artifact-${Date.now()}`,
-            type: 'application/vnd.ant.react',
-            language,
-            title: 'React Component',
-            content: code.trim(),
-            isClosed: true
-          }
-        }
+        type: "react",
+        content: match[2],
+        language: match[1],
       });
-      return;
     }
 
-    // Recherche de diagrammes Mermaid
+    // Recherche de blocs de code Mermaid
     const mermaidRegex = /```mermaid\n([\s\S]*?)```/g;
-    match = mermaidRegex.exec(message);
-    if (match) {
-      const [, diagram] = match;
+    while ((match = mermaidRegex.exec(message)) !== null) {
       onContentGenerated({
-        type: 'mermaid',
-        content: diagram.trim(),
-        metadata: {
-          artifact: {
-            identifier: `artifact-${Date.now()}`,
-            type: 'application/vnd.ant.mermaid',
-            title: 'Diagram',
-            content: diagram.trim(),
-            isClosed: true
-          }
-        }
+        type: "mermaid",
+        content: match[1],
       });
-      return;
     }
-
-    // Recherche d'autres blocs de code
-    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-    match = codeBlockRegex.exec(message);
-    if (match) {
-      const [, language, code] = match;
-      onContentGenerated({
-        type: 'code',
-        content: code.trim(),
-        language: language || 'typescript',
-        metadata: {
-          artifact: {
-            identifier: `artifact-${Date.now()}`,
-            type: 'application/vnd.ant.code',
-            language: language || 'typescript',
-            title: 'Code',
-            content: code.trim(),
-            isClosed: true
-          }
-        }
-      });
-      return;
-    }
-
-    // Recherche de contenu SVG
-    const svgRegex = /<svg[\s\S]*?<\/svg>/g;
-    match = svgRegex.exec(message);
-    if (match) {
-      const [svg] = match;
-      onContentGenerated({
-        type: 'svg',
-        content: svg,
-        metadata: {
-          artifact: {
-            identifier: `artifact-${Date.now()}`,
-            type: 'image/svg+xml',
-            title: 'SVG Image',
-            content: svg,
-            isClosed: true
-          }
-        }
-      });
-      return;
-    }
-
-    // Par défaut, traiter comme du markdown
-    onContentGenerated({
-      type: 'markdown',
-      content: message,
-      metadata: {
-        artifact: {
-          identifier: `artifact-${Date.now()}`,
-          type: 'text/markdown',
-          title: 'Response',
-          content: message,
-          isClosed: true
-        }
-      }
-    });
   };
 
   const handleSendMessage = async () => {
@@ -250,22 +169,35 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
           <div className="p-4 space-y-4">
             {messages.map((message: Message, index: number) => (
               <div
-                key={`${message.timestamp ?? Date.now()}-${index}`}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                key={index}
+                className={`flex ${
+                  message.role === "user" ? "justify-end" : "justify-start"
+                }`}
               >
                 <div
                   className={`max-w-[80%] rounded-lg p-4 ${
                     message.role === "user"
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "bg-white text-slate-800 shadow-sm"
+                      ? "bg-blue-500 text-white"
+                      : message.role === "system"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-white text-slate-800"
                   }`}
                 >
-                  <div className="font-medium mb-1">
-                    {message.role === "user" ? "You" : "Mia"}
-                  </div>
-                  <div className="prose prose-sm max-w-none">
-                    <MarkdownRenderer content={message.content} />
-                  </div>
+                  {message.role === "assistant" ? (
+                    <div className="prose prose-sm max-w-none">
+                      <MarkdownRenderer 
+                        content={message.content} 
+                        codePreviewComponent={(content: ContentData) => (
+                          <CodePreview 
+                            content={content} 
+                            onOpenCanvas={() => onContentGenerated(content)} 
+                          />
+                        )}
+                      />
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                  )}
                 </div>
               </div>
             ))}
