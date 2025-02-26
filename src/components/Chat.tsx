@@ -4,6 +4,7 @@ import { MarkdownRenderer } from "./MarkdownRenderer";
 import { ContentData } from '../types';
 import CodePreview from './CodePreview';
 import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -42,9 +43,8 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
       role: "system",
       content: `Pour toute visualisation de données ou graphiques :
       1. Utilisez TOUJOURS la librairie recharts (https://recharts.org/). C'est une exigence obligatoire.
-      2. Donnez uniquement les étapes 1 (installation) et 2 (code source complet du composant).
-      3. Ne donnez JAMAIS l'étape 3 d'utilisation du composant.
-      4. Donnez UNIQUEMENT le code source complet de mon composant React`,
+      2. Utilisez TOUJOURS les composants de @shadcn/ui/chart.
+      3. Utilisez TOUJOURS les composants CardHeader, CardTitle, CardDescription, CardContent et CardFooter de @shadcn/ui/card.`,
       timestamp: new Date().toISOString()
     };
     const savedMessages = saved ? JSON.parse(saved) : [];
@@ -237,7 +237,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
       {/* Input Area */}
       <div className="p-4 border-t border-slate-200 bg-white rounded-b-lg">
         <div className="flex gap-2">
-          <textarea
+          <Textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyPress}
