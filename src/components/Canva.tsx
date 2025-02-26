@@ -8,6 +8,8 @@ import * as LucideReact from "lucide-react";
 import mermaid from "mermaid";
 import MermaidDiagram from './MermaidDiagram'; // Import the new MermaidDiagram component
 import { Button } from "./ui/button";
+import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "./ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle } from "./ui/chart";
 
 interface CodeRunnerProps {
   code: string | React.ReactNode;
@@ -122,6 +124,20 @@ const PreviewComponent: React.FC<PreviewComponentProps> = ({ code, scope }) => {
               PolarRadiusAxis: Recharts.PolarRadiusAxis,
               Surface: Recharts.Surface,
               Symbols: Recharts.Symbols,
+              // Composants shadcn
+              Card,
+              CardHeader,
+              CardFooter,
+              CardTitle,
+              CardDescription,
+              CardContent,
+              // Composants chart
+              ChartContainer,
+              ChartTooltip,
+              ChartTooltipContent,
+              ChartLegend,
+              ChartLegendContent,
+              ChartStyle,
               console: console,
             }}
           />
