@@ -1,5 +1,6 @@
 import React from 'react';
 import { ContentData } from '../types';
+import { Button } from "./ui/button";
 
 interface CodePreviewProps {
   content: ContentData;
@@ -8,9 +9,10 @@ interface CodePreviewProps {
 
 export const CodePreview: React.FC<CodePreviewProps> = ({ content, onOpenCanvas }) => {
   return (
-    <button
+    <Button
       onClick={onOpenCanvas}
-      className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-left transition-colors"
+      variant="outline"
+      className="w-full flex items-center gap-3 justify-start h-auto py-3"
     >
       <div className="text-gray-500 font-mono text-sm">&lt;/&gt;</div>
       <div className="flex-1">
@@ -22,7 +24,7 @@ export const CodePreview: React.FC<CodePreviewProps> = ({ content, onOpenCanvas 
         </div>
       </div>
       <div className="text-gray-400">›</div>
-    </button>
+    </Button>
   );
 };
 

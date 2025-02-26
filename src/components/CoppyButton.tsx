@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from "./ui/button";
 
 interface CopyButtonProps {
   code: string;
@@ -18,14 +19,15 @@ const CopyButton: React.FC<CopyButtonProps> = ({ code }) => {
   };
 
   return (
-    <button
+    <Button
       onClick={handleCopy}
-      className="absolute right-2.5 top-2.5 px-2.5 py-1.5 bg-gray-100 border border-gray-300 rounded text-xs cursor-pointer"
+      variant="outline"
+      size="sm"
+      className="absolute right-2.5 top-2.5"
     >
       {copied ? 'Copied!' : 'Copy'}
-    </button>
+    </Button>
   );
 };
-
 
 export default CopyButton;

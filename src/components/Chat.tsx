@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState, KeyboardEvent } from "react";
+import React, { useEffect, useRef, useState, KeyboardEvent, useCallback } from "react";
 import Groq from "groq-sdk";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { ContentData } from '../types';
 import CodePreview from './CodePreview';
+import { Button } from "./ui/button";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -14,10 +15,22 @@ interface ChatProps {
   onContentGenerated: (data: ContentData) => void;
 }
 
+interface PreviewWrapperProps {
+  content: ContentData;
+  onContentGenerated: (data: ContentData) => void;
+}
+
 const groq = new Groq({
   apiKey: import.meta.env.VITE_APP_GROQ_API_KEY,
   dangerouslyAllowBrowser: true,
 });
+
+const PreviewWrapper: React.FC<PreviewWrapperProps> = ({ content, onContentGenerated }) => (
+  <CodePreview 
+    content={content} 
+    onOpenCanvas={() => onContentGenerated(content)} 
+  />
+);
 
 export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   const [inputText, setInputText] = useState("");
@@ -25,8 +38,29 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>(() => {
     const saved = localStorage.getItem("chatHistory");
-    return saved ? JSON.parse(saved) : [];
+    const systemMessage: Message = {
+      role: "system",
+      content: `Pour toute visualisation de données ou graphiques :
+      1. Utilisez TOUJOURS la librairie recharts (https://recharts.org/). C'est une exigence obligatoire.
+      2. Donnez uniquement les étapes 1 (installation) et 2 (code source complet du composant).
+      3. Ne donnez JAMAIS l'étape 3 d'utilisation du composant.
+      4. Donnez UNIQUEMENT le code source complet de mon composant React`,
+      timestamp: new Date().toISOString()
+    };
+    const savedMessages = saved ? JSON.parse(saved) : [];
+    // Ajouter le message système uniquement s'il n'existe pas déjà
+    if (!savedMessages.some((msg: { role: string; }) => msg.role === "system")) {
+      savedMessages.unshift(systemMessage);
+    }
+    return savedMessages;
   });
+
+  const renderPreviewComponent = useCallback((content: ContentData) => (
+    <PreviewWrapper
+      content={content}
+      onContentGenerated={onContentGenerated}
+    />
+  ), [onContentGenerated]);
 
   // Optimisation du scroll automatique
   const scrollToBottom = () => {
@@ -148,18 +182,18 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
       handleSendMessage();
     }
   };
-
   return (
     <div className="h-full flex flex-col bg-slate-50">
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-slate-200 bg-white rounded-t-lg shadow-sm">
         <h2 className="text-xl font-semibold text-slate-800">Chat with Mia</h2>
-        <button
+        <Button
           onClick={clearHistory}
+          variant="secondary"
           className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors duration-200"
         >
           Clear History
-        </button>
+        </Button>
       </div>
 
       {/* Chat History - Container */}
@@ -167,40 +201,35 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
         {/* Scrollable Messages Area */}
         <div ref={contentRef} className="absolute inset-0 overflow-y-auto">
           <div className="p-4 space-y-4">
-            {messages.map((message: Message, index: number) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
-                    message.role === "user"
-                      ? "bg-blue-500 text-white"
-                      : message.role === "system"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-white text-slate-800"
-                  }`}
-                >
-                  {message.role === "assistant" ? (
-                    <div className="prose prose-sm max-w-none">
-                      <MarkdownRenderer 
-                        content={message.content} 
-                        codePreviewComponent={(content: ContentData) => (
-                          <CodePreview 
-                            content={content} 
-                            onOpenCanvas={() => onContentGenerated(content)} 
+            {messages
+              .filter((message: Message) => message.role !== "system")
+              .map((message: Message, index: number) => {
+                const messageClassName = message.role === "user" 
+                  ? "bg-blue-500 text-white" 
+                  : "bg-white text-slate-800";
+
+                return (
+                  <div
+                    key={`${message.timestamp}-${index}`}
+                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-lg p-4 ${messageClassName}`}
+                    >
+                      {message.role === "assistant" ? (
+                        <div className="prose prose-sm max-w-none">
+                          <MarkdownRenderer 
+                            content={message.content}
+                            codePreviewComponent={renderPreviewComponent}
                           />
-                        )}
-                      />
+                        </div>
+                      ) : (
+                        <div className="whitespace-pre-wrap">{message.content}</div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="whitespace-pre-wrap">{message.content}</div>
-                  )}
-                </div>
-              </div>
-            ))}
+                  </div>
+                );
+              })}
           </div>
         </div>
       </div>
@@ -216,17 +245,13 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
             placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
             disabled={isLoading}
           />
-          <button
+          <Button
             onClick={handleSendMessage}
             disabled={isLoading || !inputText.trim()}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
-              isLoading || !inputText.trim()
-                ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
+            variant={isLoading || !inputText.trim() ? "secondary" : "default"}
           >
             {isLoading ? "Sending..." : "Send"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

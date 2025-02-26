@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "./ui/button";
 
 interface CustomHeaderProps {
   isShow: boolean;
@@ -17,8 +18,9 @@ const CustomHeader = ({ isShow, setIsShow }: CustomHeaderProps) => {
         <p className="text-slate-600">Initialisation du projet avec TS React et Tailwind</p>
       </div>
       <div className="flex items-center">
-        <button
-          className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium p-2.5 rounded-lg transition-colors duration-200 flex items-center justify-center"
+        <Button
+          variant="outline"
+          size="icon"
           onClick={handleShow}
         >
           <svg
@@ -33,7 +35,7 @@ const CustomHeader = ({ isShow, setIsShow }: CustomHeaderProps) => {
               clipRule="evenodd"
             />
           </svg>
-        </button>
+        </Button>
       </div>
     </div>
   );
