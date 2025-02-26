@@ -1,6 +1,6 @@
 # Environnement d'Exécution React Interactif
 
-## Vue d'ensemble
+## 🎯 Vue d'ensemble
 
 Ce projet est un environnement d'exécution interactif pour les composants React. Il permet de :
 - Afficher le code source avec coloration syntaxique
@@ -12,7 +12,7 @@ Ce projet est un environnement d'exécution interactif pour les composants React
 - Chat interactif avec streaming des réponses
 - Support avancé des graphiques Recharts avec mise en page responsive
 
-## Améliorations Récentes
+## 🚀 Améliorations Récentes
 
 - Intégration complète des composants shadcn/ui
 - Support avancé des composants Chart de shadcn/ui
@@ -25,11 +25,11 @@ Ce projet est un environnement d'exécution interactif pour les composants React
 - Correction des conventions de nommage React (useState setters)
 - Amélioration de la qualité du code et respect des meilleures pratiques
 
-## Structure du Projet
+## 🏗️ Structure du Projet
 
 ### 1. Composants Principaux
 
-#### CodeRunner (Canva.tsx)
+#### `CodeRunner` (Canva.tsx)
 Le composant principal qui gère l'affichage et l'exécution du code React.
 
 **Fonctionnalités** :
@@ -49,7 +49,7 @@ interface CodeRunnerProps {
 }
 ```
 
-#### Chat (Chat.tsx)
+#### `Chat` (Chat.tsx)
 Composant de chat interactif avec l'assistant.
 
 **Fonctionnalités** :
@@ -59,7 +59,7 @@ Composant de chat interactif avec l'assistant.
 - Support du markdown avec syntaxe highlighting
 - Prévisualisation de code et diagrammes
 
-#### MarkdownRenderer (MarkdownRenderer.tsx)
+#### `MarkdownRenderer` (MarkdownRenderer.tsx)
 Composant de rendu Markdown avec support avancé.
 
 **Fonctionnalités** :
