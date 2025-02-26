@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { ContentData } from "../types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -13,6 +7,9 @@ import * as Recharts from "recharts";
 import * as LucideReact from "lucide-react";
 import mermaid from "mermaid";
 import MermaidDiagram from './MermaidDiagram'; // Import the new MermaidDiagram component
+import { Button } from "./ui/button";
+import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "./ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle } from "./ui/chart";
 
 interface CodeRunnerProps {
   code: string | React.ReactNode;
@@ -127,6 +124,20 @@ const PreviewComponent: React.FC<PreviewComponentProps> = ({ code, scope }) => {
               PolarRadiusAxis: Recharts.PolarRadiusAxis,
               Surface: Recharts.Surface,
               Symbols: Recharts.Symbols,
+              // Composants shadcn
+              Card,
+              CardHeader,
+              CardFooter,
+              CardTitle,
+              CardDescription,
+              CardContent,
+              // Composants chart
+              ChartContainer,
+              ChartTooltip,
+              ChartTooltipContent,
+              ChartLegend,
+              ChartLegendContent,
+              ChartStyle,
               console: console,
             }}
           />
@@ -246,33 +257,28 @@ export const Canva: React.FC<CanvaProps> = ({
     <div className="h-full bg-white flex flex-col">
       <div className="flex items-center justify-between p-4 border-b border-slate-200">
         <div className="flex space-x-2">
-          <button
+          <Button
             onClick={() => setActiveTab("preview")}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              activeTab === "preview"
-                ? "bg-blue-100 text-blue-700"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
+            variant={activeTab === "preview" ? "default" : "ghost"}
+            size="sm"
           >
             Preview
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setActiveTab("source")}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              activeTab === "source"
-                ? "bg-blue-100 text-blue-700"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
+            variant={activeTab === "source" ? "default" : "ghost"}
+            size="sm"
           >
             Source
-          </button>
+          </Button>
         </div>
-        <button
+        <Button
           onClick={onClose}
-          className="text-slate-500 hover:text-slate-700 p-2 rounded-lg hover:bg-slate-100"
+          variant="ghost"
+          size="icon"
         >
           ✕
-        </button>
+        </Button>
       </div>
       <div className="flex-1 overflow-auto p-4">
         {contentData.type === "mermaid" ? (

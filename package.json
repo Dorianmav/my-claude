@@ -16,6 +16,9 @@
     "@heroicons/react": "^2.1.1",
     "@mui/icons-material": "^6.4.4",
     "@mui/material": "^6.4.4",
+    "@radix-ui/react-slot": "^1.1.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.3.1",
     "groq-sdk": "^0.15.0",
     "lucide-react": "^0.475.0",
@@ -30,7 +33,9 @@
     "recharts": "^2.15.1",
     "remark-emoji": "^5.0.1",
     "remark-gfm": "^4.0.1",
-    "remark-html": "^16.0.1"
+    "remark-html": "^16.0.1",
+    "tailwind-merge": "^3.0.2",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
