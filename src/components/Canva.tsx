@@ -1,21 +1,22 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState } from "react";
 import { ContentData } from "../types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Runner } from "react-runner";
-import * as Recharts from "recharts";
-import * as LucideReact from "lucide-react";
 import mermaid from "mermaid";
 import MermaidDiagram from './MermaidDiagram';
 import { Button } from "./ui/button";
-import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "./ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "./ui/chart";
-import { defaultChartConfig } from "../utils/chartConfig";
+import { getFullScope } from "../utils/componentScopes";
 
 interface CodeRunnerProps {
   code: string | React.ReactNode;
   language?: string;
   activeTab: "source" | "preview";
+}
+
+interface PreviewComponentProps {
+  code: string;
+  scope: Record<string, unknown>;
 }
 
 // Composant ErrorBoundary pour gérer les erreurs de rendu
@@ -46,13 +47,8 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-interface PreviewComponentProps {
-  code: string;
-  scope: Record<string, unknown>;
-}
-
+// Déplacer PreviewComponent en dehors du composant parent
 const PreviewComponent: React.FC<PreviewComponentProps> = ({ code, scope }) => {
-
   // Supprimer les imports et logger le code modifié
   const modifiedCode = code.replace(/import[\s\S]*?from.*?;(\n|$)/g, "").trim();
 
@@ -97,50 +93,7 @@ const PreviewComponent: React.FC<PreviewComponentProps> = ({ code, scope }) => {
             code={finalCode}
             scope={{
               ...scope,
-              ResponsiveContainer: Recharts.ResponsiveContainer,
-              LineChart: Recharts.LineChart,
-              BarChart: Recharts.BarChart,
-              PieChart: Recharts.PieChart,
-              ScatterChart: Recharts.ScatterChart,
-              RadialBarChart: Recharts.RadialBarChart,
-              AreaChart: Recharts.AreaChart,
-              ComposedChart: Recharts.ComposedChart,
-              RadarChart: Recharts.RadarChart,
-              Line: Recharts.Line,
-              Bar: Recharts.Bar,
-              Pie: Recharts.Pie,
-              Scatter: Recharts.Scatter,
-              RadialBar: Recharts.RadialBar,
-              Area: Recharts.Area,
-              Radar: Recharts.Radar,
-              XAxis: Recharts.XAxis,
-              YAxis: Recharts.YAxis,
-              Tooltip: Recharts.Tooltip,
-              Legend: Recharts.Legend,
-              Cell: Recharts.Cell,
-              Sector: Recharts.Sector,
-              CartesianGrid: Recharts.CartesianGrid,
-              PolarGrid: Recharts.PolarGrid,
-              PolarAngleAxis: Recharts.PolarAngleAxis,
-              PolarRadiusAxis: Recharts.PolarRadiusAxis,
-              Surface: Recharts.Surface,
-              Symbols: Recharts.Symbols,
-              // Composants shadcn
-              Card,
-              CardHeader,
-              CardFooter,
-              CardTitle,
-              CardDescription,
-              CardContent,
-              // Composants chart avec config par défaut
-              ChartContainer: (props) => (
-                <ChartContainer {...props} config={defaultChartConfig} />
-              ),
-              ChartTooltip,
-              ChartTooltipContent,
-              ChartLegend,
-              ChartLegendContent,
-              console: console,
+              ...getFullScope(),
             }}
           />
         </div>
@@ -148,14 +101,6 @@ const PreviewComponent: React.FC<PreviewComponentProps> = ({ code, scope }) => {
     </ErrorBoundary>
   );
 };
-
-// TailwindWrapper component for applying Tailwind styles
-const TailwindWrapper: React.FC<{
-  children: React.ReactNode;
-  className?: string;
-}> = ({ children, className }) => (
-  <div className={className}>{children}</div>
-);
 
 const CodeRunner: React.FC<CodeRunnerProps> = ({
   code,
@@ -179,40 +124,12 @@ const CodeRunner: React.FC<CodeRunnerProps> = ({
     .replace(/import.*?;(\n|$)/g, "")
     .trim();
 
-  // Définir le scope avec les dépendances de base nécessaires
-  const scope = {
-    React,
-    useState,
-    useEffect,
-    useRef,
-    useCallback,
-    useMemo,
-    ...LucideReact, // All Lucide icons and components
-    // Ajouter une fonction pour créer des éléments stylisés avec Tailwind
-    tw: (className: string) => ({ className }),
-    // Use the TailwindWrapper component from the outer scope
-    TailwindWrapper,
-  };
-
-  try {
-    // Vérifier si le code a un export default
-    let finalCode = codeWithoutImports;
-    if (!finalCode.includes("export default")) {
-      const regex = /(?:function|const)\s+(\w+)/;
-      const matches = regex.exec(finalCode);
-      const componentName = matches ? matches[1] : "Component";
-      finalCode = `${finalCode}\n\nexport default ${componentName};`;
-    }
-
-    return <PreviewComponent code={finalCode} scope={scope} />;
-  } catch (error) {
-    return (
-      <div className="p-4 text-red-600 bg-red-50 rounded-lg">
-        <h3 className="font-semibold mb-2">Error processing code:</h3>
-        <pre className="text-sm">{String(error)}</pre>
-      </div>
-    );
-  }
+  return (
+    <PreviewComponent
+      code={codeWithoutImports}
+      scope={getFullScope()}
+    />
+  );
 };
 
 interface MermaidRendererProps {
