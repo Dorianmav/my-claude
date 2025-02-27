@@ -40,20 +40,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>(() => {
     const saved = localStorage.getItem("chatHistory");
-    const systemMessage: Message = {
-      role: "system",
-      content: `Pour toute visualisation de données ou graphiques :
-      1. Utilisez TOUJOURS la librairie recharts (https://recharts.org/). C'est une exigence obligatoire.
-      2. Utilisez TOUJOURS les composants de @shadcn/ui/chart.
-      3. Utilisez TOUJOURS les composants CardHeader, CardTitle, CardDescription, CardContent et CardFooter de @shadcn/ui/card.`,
-      timestamp: new Date().toISOString()
-    };
-    const savedMessages = saved ? JSON.parse(saved) : [];
-    // Ajouter le message système uniquement s'il n'existe pas déjà
-    if (!savedMessages.some((msg: { role: string; }) => msg.role === "system")) {
-      savedMessages.unshift(systemMessage);
-    }
-    return savedMessages;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const renderPreviewComponent = useCallback((content: ContentData) => (
