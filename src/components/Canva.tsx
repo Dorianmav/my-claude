@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import mermaid from "mermaid";
@@ -8,6 +8,8 @@ import { PreviewComponent } from "./PreviewComponent";
 import { MermaidDiagram } from "./MermaidDiagram";
 import { CanvaProps, CodeRunnerProps, MermaidRendererProps, TabType } from "../types/components";
 import CopyButton from "./buttons/CopyButton";
+import { useKeyboardShortcut } from "../hooks/useKeyboardShortcut";
+import { Eye, Code2 } from "lucide-react";
 
 // Configure mermaid with specific settings
 mermaid.initialize({
@@ -18,6 +20,12 @@ mermaid.initialize({
 });
 
 const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) => {
+  const [copyButtonRef, setCopyButtonRef] = useState<HTMLButtonElement | null>(null);
+
+  useKeyboardShortcut('c', () => {
+    copyButtonRef?.click();
+  }, { ctrlKey: true });
+
   if (activeTab === "source") {
     return (
       <div className="relative">
@@ -28,7 +36,7 @@ const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) =>
         >
           {String(code)}
         </SyntaxHighlighter>
-        <CopyButton code={String(code)} />
+        <CopyButton code={String(code)} ref={setCopyButtonRef} />
       </div>
     );
   }
@@ -61,6 +69,10 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code, activeTab }) =>
 export const Canva: React.FC<CanvaProps> = ({ isShow, contentData, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabType>("preview");
 
+  useKeyboardShortcut('p', () => setActiveTab("preview"), { ctrlKey: true });
+  useKeyboardShortcut('s', () => setActiveTab("source"), { ctrlKey: true });
+  useKeyboardShortcut('Escape', onClose);
+
   if (!isShow) return null;
 
   const renderContent = () => {
@@ -85,14 +97,18 @@ export const Canva: React.FC<CanvaProps> = ({ isShow, contentData, onClose }) =>
             onClick={() => setActiveTab("preview")}
             variant={activeTab === "preview" ? "default" : "ghost"}
             size="sm"
+            className="flex items-center gap-2"
           >
+            <Eye size={16} />
             Preview
           </Button>
           <Button
             onClick={() => setActiveTab("source")}
             variant={activeTab === "source" ? "default" : "ghost"}
             size="sm"
+            className="flex items-center gap-2"
           >
+            <Code2 size={16} />
             Source
           </Button>
         </div>
