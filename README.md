@@ -1,6 +1,6 @@
 # Environnement d'Exécution React Interactif
 
-## Vue d'ensemble
+## 🎯 Vue d'ensemble
 
 Ce projet est un environnement d'exécution interactif pour les composants React. Il permet de :
 - Afficher le code source avec coloration syntaxique
@@ -12,7 +12,7 @@ Ce projet est un environnement d'exécution interactif pour les composants React
 - Chat interactif avec streaming des réponses
 - Support avancé des graphiques Recharts avec mise en page responsive
 
-## Améliorations Récentes
+## 🚀 Améliorations Récentes
 
 ### Interface et Expérience Utilisateur
 - Intégration complète des composants shadcn/ui
@@ -42,7 +42,7 @@ Ce projet est un environnement d'exécution interactif pour les composants React
 - Amélioration de la qualité du code et respect des meilleures pratiques
 - Suppression du message système automatique pour plus de flexibilité
 
-## Structure du Projet
+## 🏗️ Structure du Projet
 
 ### 1. Composants Principaux
 
@@ -205,6 +205,19 @@ VITE_APP_GROQ_API_KEY=votre_clé_api
 ```bash
 npm run dev
 ```
+
+## Dépendances Principales
+
+- React 18.2.0
+- Vite
+- TypeScript
+- Tailwind CSS
+- React Runner
+- React Markdown
+- Groq SDK
+- React Syntax Highlighter
+- Mermaid
+- shadcn/ui
 
 ## Contribution
 
