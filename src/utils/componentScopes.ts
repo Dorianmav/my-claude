@@ -39,6 +39,7 @@ export const getRechartsScope = () => ({
   Radar: Recharts.Radar,
   XAxis: Recharts.XAxis,
   YAxis: Recharts.YAxis,
+  ZAxis: Recharts.ZAxis,
   Tooltip: Recharts.Tooltip,
   Legend: Recharts.Legend,
   Cell: Recharts.Cell,
