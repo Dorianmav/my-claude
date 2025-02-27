@@ -1,7 +1,11 @@
-import React, { useEffect, useRef, useState, KeyboardEvent } from "react";
+import React, { useEffect, useRef, useState, KeyboardEvent, useCallback } from "react";
 import Groq from "groq-sdk";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { ContentData } from '../types';
+import CodePreview from './CodePreview';
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
+import * as LucideReact from "lucide-react";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -13,10 +17,22 @@ interface ChatProps {
   onContentGenerated: (data: ContentData) => void;
 }
 
+interface PreviewWrapperProps {
+  content: ContentData;
+  onContentGenerated: (data: ContentData) => void;
+}
+
 const groq = new Groq({
   apiKey: import.meta.env.VITE_APP_GROQ_API_KEY,
   dangerouslyAllowBrowser: true,
 });
+
+const PreviewWrapper: React.FC<PreviewWrapperProps> = ({ content, onContentGenerated }) => (
+  <CodePreview 
+    content={content} 
+    onOpenCanvas={() => onContentGenerated(content)} 
+  />
+);
 
 export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   const [inputText, setInputText] = useState("");
@@ -26,6 +42,13 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     const saved = localStorage.getItem("chatHistory");
     return saved ? JSON.parse(saved) : [];
   });
+
+  const renderPreviewComponent = useCallback((content: ContentData) => (
+    <PreviewWrapper
+      content={content}
+      onContentGenerated={onContentGenerated}
+    />
+  ), [onContentGenerated]);
 
   // Optimisation du scroll automatique
   const scrollToBottom = () => {
@@ -49,106 +72,24 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
   const processMessageForContent = (message: string) => {
     // Recherche de blocs de code React
     const reactComponentRegex = /```(jsx|tsx)\n([\s\S]*?)```/g;
-    let match = reactComponentRegex.exec(message);
-    if (match) {
-      const [, language, code] = match;
+    let match;
+
+    while ((match = reactComponentRegex.exec(message)) !== null) {
       onContentGenerated({
-        type: 'react-component',
-        content: code.trim(),
-        language,
-        metadata: {
-          artifact: {
-            identifier: `artifact-${Date.now()}`,
-            type: 'application/vnd.ant.react',
-            language,
-            title: 'React Component',
-            content: code.trim(),
-            isClosed: true
-          }
-        }
+        type: "react",
+        content: match[2],
+        language: match[1],
       });
-      return;
     }
 
-    // Recherche de diagrammes Mermaid
+    // Recherche de blocs de code Mermaid
     const mermaidRegex = /```mermaid\n([\s\S]*?)```/g;
-    match = mermaidRegex.exec(message);
-    if (match) {
-      const [, diagram] = match;
+    while ((match = mermaidRegex.exec(message)) !== null) {
       onContentGenerated({
-        type: 'mermaid',
-        content: diagram.trim(),
-        metadata: {
-          artifact: {
-            identifier: `artifact-${Date.now()}`,
-            type: 'application/vnd.ant.mermaid',
-            title: 'Diagram',
-            content: diagram.trim(),
-            isClosed: true
-          }
-        }
+        type: "mermaid",
+        content: match[1],
       });
-      return;
     }
-
-    // Recherche d'autres blocs de code
-    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-    match = codeBlockRegex.exec(message);
-    if (match) {
-      const [, language, code] = match;
-      onContentGenerated({
-        type: 'code',
-        content: code.trim(),
-        language: language || 'typescript',
-        metadata: {
-          artifact: {
-            identifier: `artifact-${Date.now()}`,
-            type: 'application/vnd.ant.code',
-            language: language || 'typescript',
-            title: 'Code',
-            content: code.trim(),
-            isClosed: true
-          }
-        }
-      });
-      return;
-    }
-
-    // Recherche de contenu SVG
-    const svgRegex = /<svg[\s\S]*?<\/svg>/g;
-    match = svgRegex.exec(message);
-    if (match) {
-      const [svg] = match;
-      onContentGenerated({
-        type: 'svg',
-        content: svg,
-        metadata: {
-          artifact: {
-            identifier: `artifact-${Date.now()}`,
-            type: 'image/svg+xml',
-            title: 'SVG Image',
-            content: svg,
-            isClosed: true
-          }
-        }
-      });
-      return;
-    }
-
-    // Par défaut, traiter comme du markdown
-    onContentGenerated({
-      type: 'markdown',
-      content: message,
-      metadata: {
-        artifact: {
-          identifier: `artifact-${Date.now()}`,
-          type: 'text/markdown',
-          title: 'Response',
-          content: message,
-          isClosed: true
-        }
-      }
-    });
   };
 
   const handleSendMessage = async () => {
@@ -175,6 +116,7 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
         })),
         model: "llama-3.3-70b-versatile",
         // model: "llama-3.2-11b-vision-preview",
+        // model: "deepseek-r1-distill-llama-70b",
         temperature: 0.7,
         max_tokens: 2048,
         top_p: 1,
@@ -229,72 +171,94 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
       handleSendMessage();
     }
   };
-
   return (
-    <div className="h-full flex flex-col bg-slate-50">
+    <div className="h-full flex flex-col bg-gradient-to-b from-slate-50 to-slate-100">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-slate-200 bg-white rounded-t-lg shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-800">Chat with Mia</h2>
-        <button
+      <div className="flex justify-between items-center p-6 border-b border-slate-200 bg-white backdrop-blur-sm bg-opacity-90 rounded-t-xl shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+          <h2 className="text-xl font-semibold text-slate-800">Chat with Mia</h2>
+        </div>
+        <Button
           onClick={clearHistory}
-          className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors duration-200"
+          variant="secondary"
+          className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 flex items-center gap-2"
         >
+          <LucideReact.Trash2 className="w-4 h-4" />
           Clear History
-        </button>
+        </Button>
       </div>
 
       {/* Chat History - Container */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative bg-slate-50 bg-opacity-50">
         {/* Scrollable Messages Area */}
-        <div ref={contentRef} className="absolute inset-0 overflow-y-auto">
-          <div className="p-4 space-y-4">
-            {messages.map((message: Message, index: number) => (
-              <div
-                key={`${message.timestamp ?? Date.now()}-${index}`}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
-                    message.role === "user"
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "bg-white text-slate-800 shadow-sm"
-                  }`}
-                >
-                  <div className="font-medium mb-1">
-                    {message.role === "user" ? "You" : "Mia"}
+        <div ref={contentRef} className="absolute inset-0 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+          <div className="p-6 space-y-6">
+            {messages
+              .filter((message: Message) => message.role !== "system")
+              .map((message: Message, index: number) => {
+                const messageClassName = message.role === "user" 
+                  ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg" 
+                  : "bg-white text-slate-800 shadow-md";
+
+                return (
+                  <div
+                    key={`${message.timestamp}-${index}`}
+                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-2xl p-4 ${messageClassName} transition-all duration-200 hover:shadow-xl`}
+                    >
+                      {message.role === "assistant" ? (
+                        <div className="prose prose-sm max-w-none prose-headings:text-slate-900 prose-p:text-slate-700 prose-a:text-blue-600 hover:prose-a:text-blue-500">
+                          <MarkdownRenderer 
+                            content={message.content}
+                            codePreviewComponent={renderPreviewComponent}
+                          />
+                        </div>
+                      ) : (
+                        <div className="whitespace-pre-wrap">{message.content}</div>
+                      )}
+                    </div>
                   </div>
-                  <div className="prose prose-sm max-w-none">
-                    <MarkdownRenderer content={message.content} />
-                  </div>
-                </div>
-              </div>
-            ))}
+                );
+              })}
           </div>
         </div>
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-slate-200 bg-white rounded-b-lg">
-        <div className="flex gap-2">
-          <textarea
+      <div className="p-6 border-t border-slate-200 bg-white backdrop-blur-sm bg-opacity-90 rounded-b-xl">
+        <div className="flex gap-3">
+          <Textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyPress}
-            className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[50px] max-h-[150px]"
+            className="flex-1 p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[60px] max-h-[150px] shadow-sm transition-all duration-200 hover:border-slate-300"
             placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
             disabled={isLoading}
           />
-          <button
+          <Button
             onClick={handleSendMessage}
             disabled={isLoading || !inputText.trim()}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
+            className={`w-24 h-[60px] flex items-center justify-center gap-2 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 ${
               isLoading || !inputText.trim()
-                ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+                ? "bg-slate-200 text-slate-500"
+                : "bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl"
             }`}
           >
-            {isLoading ? "Sending..." : "Send"}
-          </button>
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Sending...</span>
+              </div>
+            ) : (
+              <>
+                <LucideReact.SendHorizontal className="w-5 h-5" />
+                <span>Send</span>
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ export interface Artifact {
   isClosed?: boolean;
 }
 
-export type ContentType = 'code' | 'markdown' | 'react-component' | 'mermaid' | 'svg' | 'html'| 'visualization';
+export type ContentType = 'code' | 'markdown' | 'react-component' | 'mermaid' | 'svg' | 'html'| 'visualization'| 'react';
 
 export interface ContentData {
   type: ContentType;
