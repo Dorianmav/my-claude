@@ -6,10 +6,11 @@ import { Runner } from "react-runner";
 import * as Recharts from "recharts";
 import * as LucideReact from "lucide-react";
 import mermaid from "mermaid";
-import MermaidDiagram from './MermaidDiagram'; // Import the new MermaidDiagram component
+import MermaidDiagram from './MermaidDiagram';
 import { Button } from "./ui/button";
 import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "./ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle } from "./ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "./ui/chart";
+import { defaultChartConfig } from "../utils/chartConfig";
 
 interface CodeRunnerProps {
   code: string | React.ReactNode;
@@ -131,13 +132,14 @@ const PreviewComponent: React.FC<PreviewComponentProps> = ({ code, scope }) => {
               CardTitle,
               CardDescription,
               CardContent,
-              // Composants chart
-              ChartContainer,
+              // Composants chart avec config par défaut
+              ChartContainer: (props) => (
+                <ChartContainer {...props} config={defaultChartConfig} />
+              ),
               ChartTooltip,
               ChartTooltipContent,
               ChartLegend,
               ChartLegendContent,
-              ChartStyle,
               console: console,
             }}
           />
