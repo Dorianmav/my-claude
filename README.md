@@ -1,6 +1,6 @@
 # Environnement d'Exécution React Interactif
 
-## 🎯 Vue d'ensemble
+## Vue d'ensemble
 
 Ce projet est un environnement d'exécution interactif pour les composants React. Il permet de :
 - Afficher le code source avec coloration syntaxique
@@ -12,20 +12,37 @@ Ce projet est un environnement d'exécution interactif pour les composants React
 - Chat interactif avec streaming des réponses
 - Support avancé des graphiques Recharts avec mise en page responsive
 
-## 🚀 Améliorations Récentes
+## Améliorations Récentes
 
+### Interface et Expérience Utilisateur
 - Intégration complète des composants shadcn/ui
 - Support avancé des composants Chart de shadcn/ui
 - Utilisation systématique des composants Card pour une meilleure présentation
 - Remplacement des composants HTML natifs par leurs équivalents shadcn/ui
-- Amélioration des messages système pour une meilleure cohérence visuelle
-- Optimisation des performances avec suppression des logs inutiles
+- Ajout de notifications Toast pour les actions utilisateur
+- Raccourcis clavier pour une meilleure productivité :
+  - `Ctrl+C` : Copier le code
+  - `Ctrl+P` : Mode Preview
+  - `Ctrl+S` : Mode Source
+  - `Escape` : Fermer le canvas
+- Amélioration des icônes et du design des boutons
+
+### Architecture et Code
+- Réorganisation complète des composants pour plus de modularité
+- Séparation des types dans des fichiers dédiés
 - Meilleure organisation des composants (séparation des composants imbriqués)
 - Support amélioré des graphiques Recharts avec ResponsiveContainer
+- Ajout de nouveaux composants Recharts :
+  - FunnelChart et Sankey pour les visualisations avancées
+  - Composants de référence (ReferenceLine, ReferenceDot, etc.)
+  - Composants de base (Label, Brush, etc.)
+  - Composants de forme (Polygon, Rectangle, etc.)
+- Optimisation des performances avec suppression des logs inutiles
 - Correction des conventions de nommage React (useState setters)
 - Amélioration de la qualité du code et respect des meilleures pratiques
+- Suppression du message système automatique pour plus de flexibilité
 
-## 🏗️ Structure du Projet
+## Structure du Projet
 
 ### 1. Composants Principaux
 
@@ -39,6 +56,8 @@ Le composant principal qui gère l'affichage et l'exécution du code React.
 - Support complet des hooks React (useState, useEffect, useRef, useCallback, useMemo)
 - Gestion des événements React
 - Utilitaires Tailwind intégrés (tw, TailwindWrapper)
+- Copie du code avec feedback visuel
+- Raccourcis clavier intégrés
 
 **Props** :
 ```typescript
@@ -55,7 +74,7 @@ Composant de chat interactif avec l'assistant.
 **Fonctionnalités** :
 - Streaming en temps réel des réponses
 - Scroll automatique intelligent
-- Historique des messages
+- Historique des messages persistant
 - Support du markdown avec syntaxe highlighting
 - Prévisualisation de code et diagrammes
 
@@ -68,7 +87,44 @@ Composant de rendu Markdown avec support avancé.
 - Validation DOM correcte
 - Styles Tailwind intégrés
 
-### 2. Fonctionnalités Avancées
+### 2. Composants Utilitaires
+
+#### Toast (toast.tsx)
+```typescript
+interface ToastProps {
+  message: string;
+  type?: 'success' | 'error' | 'info';
+  duration?: number;
+  onClose: () => void;
+}
+```
+
+#### CopyButton (buttons/CopyButton.tsx)
+```typescript
+interface CopyButtonProps {
+  code: string;
+}
+```
+
+### 3. Hooks Personnalisés
+
+#### useKeyboardShortcut
+```typescript
+interface ShortcutOptions {
+  ctrlKey?: boolean;
+  altKey?: boolean;
+  shiftKey?: boolean;
+  metaKey?: boolean;
+}
+
+const useKeyboardShortcut = (
+  key: string,
+  callback: () => void,
+  options?: ShortcutOptions
+) => void;
+```
+
+### 4. Fonctionnalités Avancées
 
 #### Support Complet shadcn/ui
 L'application utilise maintenant les composants shadcn/ui pour une interface moderne et cohérente :
@@ -118,63 +174,45 @@ Le preview supporte maintenant complètement Tailwind CSS avec :
 </TailwindWrapper>
 ```
 
-#### Hooks React Disponibles
-Tous les hooks React principaux sont disponibles dans le preview :
-- useState
-- useEffect
-- useRef
-- useCallback
-- useMemo
+## Technologies Utilisées
 
-### 3. Système de Types
+- React 18.2.0
+- TypeScript
+- Tailwind CSS
+- Recharts
+- shadcn/ui
+- Groq SDK
+- React Runner
+- React Markdown
+- React Syntax Highlighter
+- Mermaid
+- Framer Motion
+- Lucide React
 
-#### Types pour les Hooks
-```typescript
-type ReactHook<T = unknown> = (...args: unknown[]) => T;
-type ReactStateHook<T> = (initialState: T | (() => T)) => [T, React.Dispatch<React.SetStateAction<T>>];
-type ReactEffectHook = (effect: React.EffectCallback, deps?: React.DependencyList) => void;
-```
-
-#### Scope des Dépendances
-```typescript
-interface DependencyScope {
-  React: typeof React;
-  useState: ReactStateHook<unknown>;
-  useEffect: ReactEffectHook;
-  useRef: ReactHook;
-  useCallback: ReactHook;
-  useMemo: ReactHook;
-  tw: (className: string) => { className: string };
-  TailwindWrapper: React.FC<{ children: React.ReactNode; className?: string }>;
-  [key: string]: unknown;
-}
-```
-
-## Démarrage
+## Installation
 
 1. Installer les dépendances :
 ```bash
 npm install
 ```
 
-2. Lancer le serveur de développement :
+2. Créer un fichier `.env` avec vos clés API :
+```env
+VITE_APP_GROQ_API_KEY=votre_clé_api
+```
+
+3. Lancer le serveur de développement :
 ```bash
 npm run dev
 ```
 
-## Dépendances Principales
-
-- React 18.2.0
-- Vite
-- TypeScript
-- Tailwind CSS
-- React Runner
-- React Markdown
-- Groq SDK
-- React Syntax Highlighter
-- Mermaid
-- shadcn/ui
-
 ## Contribution
 
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
+Les contributions sont les bienvenues ! N'hésitez pas à :
+- Ouvrir une issue pour signaler un bug
+- Proposer de nouvelles fonctionnalités
+- Soumettre une pull request
+
+## License
+
+MIT
