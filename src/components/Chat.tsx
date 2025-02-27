@@ -5,6 +5,7 @@ import { ContentData } from '../types';
 import CodePreview from './CodePreview';
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
+import * as LucideReact from "lucide-react";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -126,9 +127,9 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
           role,
           content,
         })),
+        model: "llama-3.3-70b-versatile",
         // model: "llama-3.2-11b-vision-preview",
-        // model: "llama-3.3-70b-versatile",
-        model: "deepseek-r1-distill-llama-70b",
+        // model: "deepseek-r1-distill-llama-70b",
         temperature: 0.7,
         max_tokens: 2048,
         top_p: 1,
@@ -184,41 +185,45 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
     }
   };
   return (
-    <div className="h-full flex flex-col bg-slate-50">
+    <div className="h-full flex flex-col bg-gradient-to-b from-slate-50 to-slate-100">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-slate-200 bg-white rounded-t-lg shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-800">Chat with Mia</h2>
+      <div className="flex justify-between items-center p-6 border-b border-slate-200 bg-white backdrop-blur-sm bg-opacity-90 rounded-t-xl shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+          <h2 className="text-xl font-semibold text-slate-800">Chat with Mia</h2>
+        </div>
         <Button
           onClick={clearHistory}
           variant="secondary"
-          className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors duration-200"
+          className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 flex items-center gap-2"
         >
+          <LucideReact.Trash2 className="w-4 h-4" />
           Clear History
         </Button>
       </div>
 
       {/* Chat History - Container */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative bg-slate-50 bg-opacity-50">
         {/* Scrollable Messages Area */}
-        <div ref={contentRef} className="absolute inset-0 overflow-y-auto">
-          <div className="p-4 space-y-4">
+        <div ref={contentRef} className="absolute inset-0 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+          <div className="p-6 space-y-6">
             {messages
               .filter((message: Message) => message.role !== "system")
               .map((message: Message, index: number) => {
                 const messageClassName = message.role === "user" 
-                  ? "bg-blue-500 text-white" 
-                  : "bg-white text-slate-800";
+                  ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg" 
+                  : "bg-white text-slate-800 shadow-md";
 
                 return (
                   <div
                     key={`${message.timestamp}-${index}`}
-                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-lg p-4 ${messageClassName}`}
+                      className={`max-w-[80%] rounded-2xl p-4 ${messageClassName} transition-all duration-200 hover:shadow-xl`}
                     >
                       {message.role === "assistant" ? (
-                        <div className="prose prose-sm max-w-none">
+                        <div className="prose prose-sm max-w-none prose-headings:text-slate-900 prose-p:text-slate-700 prose-a:text-blue-600 hover:prose-a:text-blue-500">
                           <MarkdownRenderer 
                             content={message.content}
                             codePreviewComponent={renderPreviewComponent}
@@ -236,22 +241,36 @@ export const Chat: React.FC<ChatProps> = ({ onContentGenerated }) => {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-slate-200 bg-white rounded-b-lg">
-        <div className="flex gap-2">
+      <div className="p-6 border-t border-slate-200 bg-white backdrop-blur-sm bg-opacity-90 rounded-b-xl">
+        <div className="flex gap-3">
           <Textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyPress}
-            className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none min-h-[50px] max-h-[150px]"
+            className="flex-1 p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[60px] max-h-[150px] shadow-sm transition-all duration-200 hover:border-slate-300"
             placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
             disabled={isLoading}
           />
           <Button
             onClick={handleSendMessage}
             disabled={isLoading || !inputText.trim()}
-            variant={isLoading || !inputText.trim() ? "secondary" : "default"}
+            className={`w-24 h-[60px] flex items-center justify-center gap-2 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+              isLoading || !inputText.trim()
+                ? "bg-slate-200 text-slate-500"
+                : "bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl"
+            }`}
           >
-            {isLoading ? "Sending..." : "Send"}
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Sending...</span>
+              </div>
+            ) : (
+              <>
+                <LucideReact.SendHorizontal className="w-5 h-5" />
+                <span>Send</span>
+              </>
+            )}
           </Button>
         </div>
       </div>
