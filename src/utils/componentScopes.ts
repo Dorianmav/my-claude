@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo, PureComponent } from "react";
 import * as Recharts from "recharts";
 import * as LucideReact from "lucide-react";
 import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ export const getBaseScope = () => ({
   useRef,
   useCallback,
   useMemo,
+  PureComponent,
   ...LucideReact, // Tous les composants et icônes Lucide
   tw: (className: string) => ({ className }),
   TailwindWrapper,

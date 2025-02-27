@@ -7,6 +7,7 @@ import { getFullScope } from "../utils/componentScopes";
 import { PreviewComponent } from "./PreviewComponent";
 import { MermaidDiagram } from "./MermaidDiagram";
 import { CanvaProps, CodeRunnerProps, MermaidRendererProps, TabType } from "../types/components";
+import CopyButton from "./buttons/CopyButton";
 
 // Configure mermaid with specific settings
 mermaid.initialize({
@@ -19,16 +20,20 @@ mermaid.initialize({
 const CodeRunner: React.FC<CodeRunnerProps> = ({ code, language, activeTab }) => {
   if (activeTab === "source") {
     return (
-      <SyntaxHighlighter
-        language={language ?? "typescript"}
-        style={vscDarkPlus}
-        className="rounded-lg"
-      >
-        {String(code)}
-      </SyntaxHighlighter>
+      <div className="relative">
+        <SyntaxHighlighter
+          language={language ?? "typescript"}
+          style={vscDarkPlus}
+          className="rounded-lg"
+        >
+          {String(code)}
+        </SyntaxHighlighter>
+        <CopyButton code={String(code)} />
+      </div>
     );
   }
 
+  // Supprimer les imports car on fournit déjà les dépendances dans le scope
   const codeWithoutImports = String(code)
     .replace(/import.*?;(\n|$)/g, "")
     .trim();
@@ -59,18 +64,17 @@ export const Canva: React.FC<CanvaProps> = ({ isShow, contentData, onClose }) =>
   if (!isShow) return null;
 
   const renderContent = () => {
-    switch (contentData.type) {
-      case "mermaid":
-        return <MermaidRenderer code={contentData.content} activeTab={activeTab} />;
-      default:
-        return (
-          <CodeRunner
-            code={contentData.content}
-            language={contentData.language}
-            activeTab={activeTab}
-          />
-        );
+    if (contentData.type === "mermaid") {
+      return <MermaidRenderer code={contentData.content} activeTab={activeTab} />;
     }
+
+    return (
+      <CodeRunner
+        code={contentData.content}
+        language={contentData.language}
+        activeTab={activeTab}
+      />
+    );
   };
 
   return (
