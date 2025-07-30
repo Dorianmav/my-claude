@@ -1,6 +1,6 @@
 import React from 'react';
-import { ContentData } from '../types';
-import { Button } from "./ui/button";
+import { ContentData } from '../../types';
+import { Button } from "../ui/button";
 
 interface CodePreviewProps {
   content: ContentData;

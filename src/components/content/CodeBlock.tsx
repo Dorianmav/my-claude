@@ -2,7 +2,7 @@ import React from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { ComponentPropsWithoutRef } from 'react';
-import { ContentData } from '../types';
+import { ContentData } from '../../types';
 
 interface CodeBlockProps extends ComponentPropsWithoutRef<'code'> {
   inline?: boolean;
@@ -36,10 +36,14 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
       });
     }
 
+    // Contournement pour le conflit de types avec react-syntax-highlighter
+    const syntaxStyle = vscDarkPlus as { [key: string]: React.CSSProperties };
+    
     return (
       <div className="!my-0 overflow-hidden rounded-lg bg-[#1a1a1a]">
         <SyntaxHighlighter
-          style={vscDarkPlus}
+          // @ts-expect-error - Conflit de types connu avec react-syntax-highlighter
+          style={syntaxStyle}
           language={language}
           wrapLongLines
           PreTag="div"

@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 
 interface CustomHeaderProps {
   isShow: boolean;
@@ -13,9 +13,9 @@ const CustomHeader = ({ isShow, setIsShow }: CustomHeaderProps) => {
     <div className="w-full flex justify-between items-center p-4 bg-white shadow-sm">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-slate-800">
-          Chat with Mia Claude
+          Chat with PpLG
         </h1>
-        <p className="text-slate-600">Initialisation du projet avec TS React et Tailwind</p>
+        <p className="text-slate-600">Petit projet perso</p>
       </div>
       <div className="flex items-center">
         <Button

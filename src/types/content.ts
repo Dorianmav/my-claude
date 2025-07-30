@@ -1,3 +1,5 @@
+import React from 'react';
+
 export type ArtifactType = 
   | 'application/vnd.ant.code'
   | 'application/vnd.ant.react'
@@ -24,4 +26,5 @@ export interface ContentData {
   metadata?: {
     artifact?: Artifact;
   };
+  artifact?: Artifact;
 }

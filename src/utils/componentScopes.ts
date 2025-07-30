@@ -3,8 +3,8 @@ import * as Recharts from "recharts";
 import * as LucideReact from "lucide-react";
 import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { CustomChartContainer } from "@/components/CustomChartContainer";
-import { TailwindWrapper } from "@/components/TailwindWrapper";
+import { CustomChartContainer } from "@/components/content/CustomChartContainer";
+import { TailwindWrapper } from "@/components/common/TailwindWrapper";
 
 // Scope de base avec React hooks et utilitaires
 export const getBaseScope = () => ({
