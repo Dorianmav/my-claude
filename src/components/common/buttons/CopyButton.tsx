@@ -1,6 +1,6 @@
-import React, { useState, forwardRef } from 'react';
+import { useState, forwardRef } from 'react';
 import { Copy, Check } from 'lucide-react';
-import { Toast } from '../ui/toast';
+import { Toast } from '../../ui/toast';
 
 interface CopyButtonProps {
   code: string;

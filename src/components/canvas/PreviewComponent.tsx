@@ -1,8 +1,8 @@
 import React from "react";
 import { Runner } from "react-runner";
-import { PreviewComponentProps } from "../types/components";
-import { ErrorBoundary } from "./ErrorBoundary";
-import { getFullScope } from "../utils/componentScopes";
+import { PreviewComponentProps } from "../../types/components";
+import { ErrorBoundary } from "../common/ErrorBoundary";
+import { getFullScope } from "../../utils/componentScopes";
 
 export const PreviewComponent: React.FC<PreviewComponentProps> = ({ code, scope }) => {
   const modifiedCode = code.replace(/import[\s\S]*?from.*?;(\n|$)/g, "").trim();

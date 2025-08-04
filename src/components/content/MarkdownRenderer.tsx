@@ -2,9 +2,9 @@ import React from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
 import remarkEmoji from 'remark-emoji';
 import type { ComponentPropsWithoutRef } from 'react';
-import { ContentData } from '../types';
+import { ContentData } from '../../types';
 import CodeBlock from './CodeBlock';
-import CustomParagraph from './CustomParagraph';
+import CustomParagraph from '../common/CustomParagraph';
 
 interface MarkdownRendererProps {
   content: string;

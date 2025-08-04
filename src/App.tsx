@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Chat } from "./components/Chat";
-import { Canva } from "./components/Canva";
-import CustomHeader from "./components/CustomHeader";
+import { Canva } from "./components/canvas/Canva";
+import CustomHeader from "./components/layout/CustomHeader";
 import { ContentData } from "./types";
 
 function App() {

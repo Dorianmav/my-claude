@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import mermaid, { MermaidConfig } from 'mermaid';
-import SaveImageButton from './buttons/SaveImageButton';
+import SaveImageButton from '../common/buttons/SaveImageButton';
 
 interface MermaidDiagramProps {
   code: string;

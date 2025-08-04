@@ -1,7 +1,7 @@
 import React from 'react';
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import CopyButton from "./CoppyButton";
+import CopyButton from "../common/buttons/CopyButton";
 
 type CodeProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
 

@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import mermaid from "mermaid";
-import { Button } from "./ui/button";
-import { getFullScope } from "../utils/componentScopes";
+import { Button } from "../ui/button";
+import { getFullScope } from "../../utils/componentScopes";
 import { PreviewComponent } from "./PreviewComponent";
-import { MermaidDiagram } from "./MermaidDiagram";
-import { CanvaProps, CodeRunnerProps, MermaidRendererProps, TabType } from "../types/components";
-import CopyButton from "./buttons/CopyButton";
-import { useKeyboardShortcut } from "../hooks/useKeyboardShortcut";
+import { MermaidDiagram } from "../content/MermaidDiagram";
+import { CanvaProps, CodeRunnerProps, MermaidRendererProps, TabType } from "../../types/components";
+import CopyButton from "../common/buttons/CopyButton";
+import { useKeyboardShortcut } from "../../hooks/useKeyboardShortcut";
 import { Eye, Code2 } from "lucide-react";
 
 // Configure mermaid with specific settings
